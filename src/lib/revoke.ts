@@ -63,3 +63,17 @@ export function parseWindowEvidence(body: unknown, token: string): WindowEvidenc
     tight: targets.length === 1 && targets[0] === token.toLowerCase() && maxTxs === 1,
   };
 }
+
+/**
+ * Can the account send an EVM transaction to `target` right now, judging by its
+ * window record (GET /qorechain/pqc/v1/evm_window/{qor})? Used before asking a
+ * desktop wallet to sign: wallets other than QoreX mobile can't open a window,
+ * and some (Keplr) turn the chain's refusal into "An unknown RPC error occurred".
+ */
+export function windowAllowsTx(body: unknown, target: string): boolean {
+  const b = (body ?? {}) as Record<string, unknown>;
+  if (b.found !== true || b.live !== true) return false;
+  if (Number(b.remaining_txs ?? 0) < 1 || Number(b.remaining_blocks ?? 0) < 1) return false;
+  const targets = Array.isArray(b.allowed_targets) ? (b.allowed_targets as string[]).map((t) => t.toLowerCase()) : [];
+  return targets.length === 0 || targets.includes(target.toLowerCase());
+}

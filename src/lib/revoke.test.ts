@@ -1,7 +1,7 @@
 import type { Hex } from "viem";
 import { describe, expect, it } from "vitest";
 import type { LiveApproval } from "./evmApprovalState";
-import { describeEvmRevoke, evmRevokeCall, parseWindowEvidence, permissionKey } from "./revoke";
+import { describeEvmRevoke, evmRevokeCall, parseWindowEvidence, permissionKey, windowAllowsTx } from "./revoke";
 
 const base: LiveApproval = {
   kind: "erc20",
@@ -58,5 +58,21 @@ describe("parseWindowEvidence", () => {
 
   it("flags a wide window", () => {
     expect(parseWindowEvidence({ ...record, allowed_targets: [], max_txs: "20" }, base.token).tight).toBe(false);
+  });
+});
+
+describe("windowAllowsTx", () => {
+  const FUSD = "0x97143B771D34ddb9130b807b135Ae675A5a963CA";
+  const open = { found: true, live: true, remaining_txs: "1", remaining_blocks: "40", allowed_targets: [FUSD.toLowerCase()] };
+  it("allows a live window with room, for its target", () => {
+    expect(windowAllowsTx(open, FUSD)).toBe(true);
+    expect(windowAllowsTx({ ...open, allowed_targets: [] }, FUSD)).toBe(true);
+  });
+  it("refuses a used-up, expired, missing or wrong-target window", () => {
+    expect(windowAllowsTx({ ...open, remaining_txs: "0" }, FUSD)).toBe(false);
+    expect(windowAllowsTx({ ...open, live: false }, FUSD)).toBe(false);
+    expect(windowAllowsTx({ found: false }, FUSD)).toBe(false);
+    expect(windowAllowsTx({ ...open, allowed_targets: ["0x02292293c13880a26242690eb70a0e42b8e91c28"] }, FUSD)).toBe(false);
+    expect(windowAllowsTx(undefined, FUSD)).toBe(false);
   });
 });
