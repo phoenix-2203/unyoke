@@ -161,7 +161,7 @@ export function WindowSpike() {
   }
 
   return (
-    <section style={{ border: "1px dashed #999", padding: "1rem", marginTop: "1.5rem" }}>
+    <section>
       <h2>Spike: limited window and native revokes from QoreX</h2>
       <p>
         Testnet only. Use a throwaway account. Connect your EVM wallet above first (the Ethereum-style
@@ -184,7 +184,7 @@ export function WindowSpike() {
         <li><button type="button" onClick={authzGrantThenRevoke} disabled={!qorAddress}>Native: create a test authz grant, then revoke it</button></li>
         <li><button type="button" onClick={feeGrantThenRevoke} disabled={!qorAddress}>Native: create a test fee grant, then revoke it</button></li>
       </ol>
-      <pre style={{ whiteSpace: "pre-wrap", background: "#f4f4f4", padding: "0.5rem" }}>
+      <pre>
         {log.map((l) => `${l.at}  ${l.text}`).join("\n") || "Log is empty."}
       </pre>
     </section>
