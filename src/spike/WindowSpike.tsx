@@ -10,11 +10,13 @@
  * Throwaway: replaced by the real revoke flow once the answers are known.
  */
 import { QORECHAIN_TESTNET_CHAIN_ID, getQorexNative, hasCapability } from "@qorechain/qorex-types";
-import { evmWindowStatus, toEvmAddress } from "@qorechain/evm";
+import { evmWindowStatus, toEvmAddress, toQorAddress } from "@qorechain/evm";
+import { authz, feegrant } from "@qorechain/sdk";
 import { useState } from "react";
 import { erc20Abi, getAddress } from "viem";
 import { useAccount, useWriteContract } from "wagmi";
 import { encodeCloseWindow, encodeOpenWindow, planRevokeWindow } from "../lib/revokeWindow";
+import { toQorexMessage } from "../lib/qorexMessage";
 
 const FUSD = "0x97143B771D34ddb9130b807b135Ae675A5a963CA" as const;
 /** A burn-style address used only as the test spender: nobody holds its key. */
@@ -22,6 +24,21 @@ const TEST_SPENDER = "0x000000000000000000000000000000000000dEaD" as const;
 const MAX_FEE_PER_GAS = 250_000_000_000n; // 250 gwei, the figure the QoreChain workshop uses
 
 type Line = { at: string; text: string };
+
+/** Throwaway grantee for the native-lane tests: the qor1 form of 0x...dEaD. */
+const TEST_GRANTEE = toQorAddress(TEST_SPENDER);
+
+// Minimal protobuf for the two test grants (field 1/2 strings and a nested message).
+const enc = new TextEncoder();
+const lenField = (field: number, bytes: Uint8Array) => {
+  if (bytes.length > 127) throw new Error("test payload too long");
+  return Uint8Array.from([(field << 3) | 2, bytes.length, ...bytes]);
+};
+/** GenericAuthorization { msg } */
+const genericAuthorization = (msgTypeUrl: string) => lenField(1, enc.encode(msgTypeUrl));
+/** BasicAllowance { spend_limit: [Coin { denom, amount }] } */
+const basicAllowance = (denom: string, amount: string) =>
+  lenField(1, Uint8Array.from([...lenField(1, enc.encode(denom)), ...lenField(2, enc.encode(amount))]));
 
 export function WindowSpike() {
   const { address: evmAddress } = useAccount();
@@ -77,6 +94,53 @@ export function WindowSpike() {
     }
   }
 
+  async function sendNative(label: string, msg: { typeUrl: string; value: unknown }) {
+    const res = await getQorexNative()!.signAndBroadcast({
+      chainId: QORECHAIN_TESTNET_CHAIN_ID,
+      messages: [toQorexMessage(msg)],
+      memo: `unyoke spike: ${label}`,
+    });
+    say(`${label}: code ${res.code}, shield ${res.shield}, tx ${res.txHash}`);
+  }
+
+  async function authzGrantThenRevoke() {
+    if (!qorAddress) return;
+    const msgTypeUrl = "/cosmos.gov.v1.MsgVote";
+    try {
+      await sendNative(
+        "authz grant (vote only)",
+        authz.grant({
+          granter: qorAddress,
+          grantee: TEST_GRANTEE,
+          grant: {
+            authorization: { typeUrl: "/cosmos.authz.v1beta1.GenericAuthorization", value: genericAuthorization(msgTypeUrl) },
+            expiration: { seconds: BigInt(Math.floor(Date.now() / 1000) + 86_400), nanos: 0 },
+          },
+        }),
+      );
+      await sendNative("authz revoke", authz.revoke({ granter: qorAddress, grantee: TEST_GRANTEE, msgTypeUrl }));
+    } catch (e) {
+      fail("authz grant/revoke", e);
+    }
+  }
+
+  async function feeGrantThenRevoke() {
+    if (!qorAddress) return;
+    try {
+      await sendNative(
+        "fee grant (1000 uqor)",
+        feegrant.grant({
+          granter: qorAddress,
+          grantee: TEST_GRANTEE,
+          allowance: { typeUrl: "/cosmos.feegrant.v1beta1.BasicAllowance", value: basicAllowance("uqor", "1000") },
+        }),
+      );
+      await sendNative("fee grant revoke", feegrant.revoke({ granter: qorAddress, grantee: TEST_GRANTEE }));
+    } catch (e) {
+      fail("fee grant/revoke", e);
+    }
+  }
+
   async function closeWindow() {
     if (!qorAddress) return;
     try {
@@ -107,7 +171,7 @@ export function WindowSpike() {
 
   return (
     <section style={{ border: "1px dashed #999", padding: "1rem", marginTop: "1.5rem" }}>
-      <h2>Spike: limited window from QoreX</h2>
+      <h2>Spike: limited window and native revokes from QoreX</h2>
       <p>
         Testnet only. Use a throwaway account. Connect your EVM wallet above first (the Ethereum-style
         account), then follow the buttons in order.
@@ -126,6 +190,8 @@ export function WindowSpike() {
         <li><button type="button" onClick={approveThenRevoke} disabled={!evmAddress}>Approve 1 fUSD to a test spender, then revoke it</button></li>
         <li><button type="button" onClick={closeWindow} disabled={!qorAddress}>Close window</button></li>
         <li><button type="button" onClick={readWindow} disabled={!qorAddress}>Read window again</button></li>
+        <li><button type="button" onClick={authzGrantThenRevoke} disabled={!qorAddress}>Native: create a test authz grant, then revoke it</button></li>
+        <li><button type="button" onClick={feeGrantThenRevoke} disabled={!qorAddress}>Native: create a test fee grant, then revoke it</button></li>
       </ol>
       <pre style={{ whiteSpace: "pre-wrap", background: "#f4f4f4", padding: "0.5rem" }}>
         {log.map((l) => `${l.at}  ${l.text}`).join("\n") || "Log is empty."}
