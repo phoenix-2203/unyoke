@@ -8,6 +8,7 @@ import { type EvmClient, type ScanProgress, type ScanResult, scanAccount } from 
 import { LINKS, Link, navigate } from "../router";
 import { DEMO_ADDRESS } from "./LandingPage";
 import { Receipt } from "./Receipt";
+import { TestSandbox } from "./TestSandbox";
 import { Results } from "./Results";
 import { useRevoke } from "./useRevoke";
 import { evmApprovalRisk, nativePermissionRisk } from "../lib/risk";
@@ -177,6 +178,7 @@ export function AppPage({ initialAddress }: { initialAddress?: string }) {
           <WalletHint />
           <Results r={result} actions={{ status, evmBlocker, onRevokeEvm: revokeEvm, onRevokeNative: revokeNative }} />
           <Receipt account={result.account.evm} entries={receipt} />
+          <TestSandbox qor={result.account.qor} evm={result.account.evm} onDone={() => run(result.account.qor)} />
         </section>
       ) : (
         !scanning && (
