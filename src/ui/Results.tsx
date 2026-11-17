@@ -5,8 +5,8 @@ import { type Risk, type RiskLevel, evmApprovalRisk, nativePermissionRisk, sortB
 import { permissionKey } from "../lib/revoke";
 import type { ScanResult } from "../lib/scanAccount";
 import type { RevokeStatus } from "./useRevoke";
+import { TxLink } from "./TxLink";
 
-const EXPLORER_TX = "https://explore.qore.network/tx/";
 
 export interface RevokeActions {
   status: Record<string, RevokeStatus>;
@@ -139,9 +139,9 @@ function StatusLine({ st, blocked }: { st?: RevokeStatus; blocked?: string }) {
   if (st?.txHash) {
     return (
       <p className={`status-line ${st.state === "done" ? "ok" : ""}`}>
-        <a href={`${EXPLORER_TX}${st.txHash}`} target="_blank" rel="noreferrer" className="mono">
+        <TxLink hash={st.txHash} className="mono">
           tx {st.txHash.slice(0, 10)}…
-        </a>
+        </TxLink>
         {st.evidence?.found && (
           <span>
             {" · "}
@@ -188,9 +188,7 @@ function EvmRow({ a, risk, example, actions }: { a: LiveApproval; risk: Risk; ex
           {a.setInTx && !example && (
             <>
               {" · "}
-              <a href={`${EXPLORER_TX}${a.setInTx}`} target="_blank" rel="noreferrer">
-                block {a.setAtBlock.toLocaleString("en-US")}
-              </a>
+              <TxLink hash={a.setInTx}>block {a.setAtBlock.toLocaleString("en-US")}</TxLink>
             </>
           )}
         </div>

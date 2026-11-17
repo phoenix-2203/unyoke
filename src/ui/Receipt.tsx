@@ -1,12 +1,12 @@
 /** The receipt: what was revoked, each transaction, and the window QoreX used. */
 import { useState } from "react";
 import { shortAddress } from "../lib/format";
+import { TxLink } from "./TxLink";
 import type { ReceiptEntry } from "./useRevoke";
 
 /** Shorten long addresses for the on-screen list; the copied receipt keeps them in full. */
 const shorten = (text: string) => text.replace(/\b(qor1[0-9a-z]{30,}|0x[0-9a-fA-F]{40})\b/g, shortAddress);
 
-const EXPLORER_TX = "https://explore.qore.network/tx/";
 
 export function receiptMarkdown(account: string, entries: ReceiptEntry[]): string {
   const lines = [
@@ -57,9 +57,9 @@ export function Receipt({ account, entries }: { account: string; entries: Receip
           <li key={e.key + e.txHash}>
             <span className={`lane-tag ${e.lane === "EVM" ? "evm" : "native"}`}>{e.lane}</span>
             <span className="receipt-what" title={e.what}>{shorten(e.what)}</span>
-            <a className="mono" href={`${EXPLORER_TX}${e.txHash}`} target="_blank" rel="noreferrer">
+            <TxLink className="mono" hash={e.txHash}>
               {e.txHash.slice(0, 12)}…
-            </a>
+            </TxLink>
             {e.evidence?.found && (
               <span className={`receipt-window ${e.evidence.tight ? "tight" : ""}`}>
                 {e.evidence.tight ? "1-tx window, this token only ✓" : `window: ${e.evidence.maxTxs} tx`}
@@ -68,6 +68,9 @@ export function Receipt({ account, entries }: { account: string; entries: Receip
           </li>
         ))}
       </ol>
+      <p className="receipt-note muted">
+        Transaction links open the QoreChain explorer, which starts on mainnet: choose <b>Testnet</b> at the top to see them.
+      </p>
     </section>
   );
 }
