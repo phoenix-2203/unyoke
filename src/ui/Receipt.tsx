@@ -1,6 +1,10 @@
 /** The receipt: what was revoked, each transaction, and the window QoreX used. */
 import { useState } from "react";
+import { shortAddress } from "../lib/format";
 import type { ReceiptEntry } from "./useRevoke";
+
+/** Shorten long addresses for the on-screen list; the copied receipt keeps them in full. */
+const shorten = (text: string) => text.replace(/\b(qor1[0-9a-z]{30,}|0x[0-9a-fA-F]{40})\b/g, shortAddress);
 
 const EXPLORER_TX = "https://explore.qore.network/tx/";
 
@@ -52,7 +56,7 @@ export function Receipt({ account, entries }: { account: string; entries: Receip
         {entries.map((e) => (
           <li key={e.key + e.txHash}>
             <span className={`lane-tag ${e.lane === "EVM" ? "evm" : "native"}`}>{e.lane}</span>
-            <span className="receipt-what">{e.what}</span>
+            <span className="receipt-what" title={e.what}>{shorten(e.what)}</span>
             <a className="mono" href={`${EXPLORER_TX}${e.txHash}`} target="_blank" rel="noreferrer">
               {e.txHash.slice(0, 12)}…
             </a>

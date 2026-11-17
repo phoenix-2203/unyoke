@@ -1767,3 +1767,7 @@ button.revoke:not(:disabled):hover {
 .sandbox .status-line {
   grid-column: auto;
 }
+
+.receipt-what {
+  overflow-wrap: anywhere;
+}
