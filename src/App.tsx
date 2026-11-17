@@ -1,47 +1,86 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useBlockNumber } from "wagmi";
+import { LINKS, Link, useRoute } from "./router";
 import { WindowSpike } from "./spike/WindowSpike";
+import { AppPage } from "./ui/AppPage";
+import { LandingPage } from "./ui/LandingPage";
 import { LogoMark } from "./ui/Logo";
-import { ScanPage } from "./ui/ScanPage";
+import { ArrowRight, BookIcon, GitHubIcon, TrophyIcon } from "./ui/icons";
 
 /** The day-1 wallet test page stays reachable at ?spike for re-testing QoreX. */
 const showSpike = new URLSearchParams(window.location.search).has("spike");
 
+function IconLink({ href, label, children }: { href: string; label: string; children: React.ReactNode }) {
+  return (
+    <a className="icon-btn" href={href} target="_blank" rel="noreferrer" aria-label={label} title={label}>
+      {children}
+    </a>
+  );
+}
+
 export function App() {
+  const { route, search } = useRoute();
   const { data: block } = useBlockNumber({ watch: true });
+  const address = search.get("address") ?? undefined;
+
   return (
     <main>
       <nav className="nav">
-        <div className="brand">
+        <Link href="/" className="brand" aria-label="Unyoke home">
           <LogoMark size={26} />
           unyoke
-        </div>
+        </Link>
         <div className="nav-links">
-          <a href="https://docs.qorechain.io/developer-guide/evm-development" target="_blank" rel="noreferrer">
-            Why
-          </a>
-          <a href="https://github.com/phoenix-2203/unyoke" target="_blank" rel="noreferrer">
-            GitHub
-          </a>
+          <Link href="/#checks">What it checks</Link>
+          <Link href="/#different">Why it's different</Link>
+          <Link href="/app">Scanner</Link>
         </div>
         <div className="nav-right">
-          <span className="chip hide-sm">
+          <span className="chip hide-sm" title="Latest QoreChain testnet block">
             <span className="dot" /> testnet {block ? `#${block.toLocaleString("en-US")}` : "…"}
           </span>
-          <ConnectButton chainStatus="none" showBalance={false} accountStatus="address" />
+          <div className="icon-group hide-sm">
+            <IconLink href={LINKS.docs} label="QoreChain docs">
+              <BookIcon size={17} />
+            </IconLink>
+            <IconLink href={LINKS.github} label="Unyoke on GitHub">
+              <GitHubIcon size={17} />
+            </IconLink>
+          </div>
+          {route === "app" ? (
+            <ConnectButton chainStatus="none" showBalance={false} accountStatus="address" />
+          ) : (
+            <Link href="/app" className="btn-link">
+              Launch app <ArrowRight size={15} />
+            </Link>
+          )}
         </div>
       </nav>
-      <ScanPage />
+
+      {route === "app" ? <AppPage key={address ?? ""} initialAddress={address} /> : <LandingPage />}
+
       {showSpike && (
         <div className="spike">
           <WindowSpike />
         </div>
       )}
+
       <footer className="footer">
-        <span className="brand">
+        <Link href="/" className="brand">
           <LogoMark size={20} /> unyoke
-        </span>
-        <span>Built for Build Before Q-Day on QoreChain · MIT · reads public data, never your keys</span>
+        </Link>
+        <div className="footer-links">
+          <a href={LINKS.github} target="_blank" rel="noreferrer">
+            <GitHubIcon size={15} /> GitHub
+          </a>
+          <a href={LINKS.docs} target="_blank" rel="noreferrer">
+            <BookIcon size={15} /> QoreChain docs
+          </a>
+          <a href={LINKS.fest} target="_blank" rel="noreferrer">
+            <TrophyIcon size={15} /> Build Before Q-Day
+          </a>
+        </div>
+        <span>MIT · reads public data, never your keys</span>
       </footer>
     </main>
   );
