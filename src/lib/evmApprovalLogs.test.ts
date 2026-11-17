@@ -6,6 +6,8 @@ import {
   type LogFilter,
   type RawLog,
   decodeApprovalLog,
+  earliestLogBlock,
+  parseLowestAvailableHeight,
   latestPerPair,
   scanApprovalEvents,
 } from "./evmApprovalLogs";
@@ -118,5 +120,21 @@ describe("latestPerPair", () => {
     const latest = latestPerPair(evs);
     expect(latest).toHaveLength(2);
     expect(latest.find((e) => e.token === TOKEN)?.value).toBe(9n);
+  });
+});
+
+describe("pruned history", () => {
+  const msg =
+    "failed to fetch block result from CometBFT 1: height 1 is not available, lowest height is 8790799";
+
+  it("reads the lowest kept height from the node's error", () => {
+    expect(parseLowestAvailableHeight(msg)).toBe(8_790_799n);
+    expect(parseLowestAvailableHeight("something else")).toBeNull();
+  });
+
+  it("finds where log history starts", async () => {
+    expect(await earliestLogBlock(async () => { throw new Error(msg); })).toBe(8_790_799n);
+    expect(await earliestLogBlock(async () => [])).toBe(1n);
+    await expect(earliestLogBlock(async () => { throw new Error("timeout"); })).rejects.toThrow("timeout");
   });
 });

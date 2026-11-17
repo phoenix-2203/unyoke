@@ -133,3 +133,28 @@ export function latestPerPair(events: readonly ApprovalEvent[]): ApprovalEvent[]
   }
   return [...byKey.values()];
 }
+
+/**
+ * The public testnet node prunes old blocks: asking for logs below its lowest
+ * kept height fails with "... height N is not available, lowest height is M".
+ * Approvals set before M cannot be found from logs by anyone using that node.
+ */
+export function parseLowestAvailableHeight(message: string): bigint | null {
+  const m = /lowest height is (\d+)/i.exec(message);
+  return m ? BigInt(m[1]!) : null;
+}
+
+/**
+ * The first block whose logs the node can still serve. Probes block 1; if the
+ * node has pruned it, reads the lowest kept height from the error message.
+ */
+export async function earliestLogBlock(getLogs: GetLogs): Promise<bigint> {
+  try {
+    await getLogs({ fromBlock: 1n, toBlock: 1n, topics: [APPROVAL_TOPIC] });
+    return 1n;
+  } catch (e) {
+    const lowest = parseLowestAvailableHeight(e instanceof Error ? e.message : String(e));
+    if (lowest === null) throw e;
+    return lowest;
+  }
+}
