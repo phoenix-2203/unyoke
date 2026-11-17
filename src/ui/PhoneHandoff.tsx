@@ -13,18 +13,28 @@ export function scanLink(address: string): string {
   return `${window.location.origin}/app?address=${encodeURIComponent(address)}`;
 }
 
+/**
+ * QoreX's universal link: opens a page straight in the QoreX app's browser
+ * (and offers the app if it isn't installed). The same link the Build Before
+ * Q-Day site uses for voting from a phone.
+ */
+export function qorexBrowseLink(url: string): string {
+  return `https://link.qore.network/browse?url=${encodeURIComponent(url)}`;
+}
+
 export function PhoneHandoff({ address }: { address: string }) {
   const link = scanLink(address);
+  const open = qorexBrowseLink(link);
   const [svg, setSvg] = useState<string>();
   const [copied, setCopied] = useState(false);
   const phone = isPhone();
 
   useEffect(() => {
     if (phone) return;
-    QRCode.toString(link, { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#0b0c0e", light: "#ffffff" } })
+    QRCode.toString(open, { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#0b0c0e", light: "#ffffff" } })
       .then(setSvg)
       .catch(() => setSvg(undefined));
-  }, [link, phone]);
+  }, [open, phone]);
 
   if (isQorexMobile()) return null;
 
@@ -44,14 +54,15 @@ export function PhoneHandoff({ address }: { address: string }) {
         <div className="handoff-text">
           <span className="kicker mono">revoke from QoreX</span>
           <h3>Open this scan in the QoreX app</h3>
-          <ol>
-            <li>Copy the link.</li>
-            <li>Open QoreX, go to its browser, and paste it.</li>
-            <li>Revoke there: QoreX signs with your post-quantum key.</li>
-          </ol>
-          <button type="button" onClick={copy}>
-            {copied ? "Copied ✓" : "Copy link"}
-          </button>
+          <p className="muted">QoreX signs revokes with your post-quantum key and opens a one-transaction window for each token.</p>
+          <div className="handoff-actions">
+            <a className="button" href={open}>
+              Open in QoreX
+            </a>
+            <button type="button" className="ghost" onClick={copy}>
+              {copied ? "Copied ✓" : "Copy link"}
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -73,8 +84,7 @@ export function PhoneHandoff({ address }: { address: string }) {
         </p>
         <ol>
           <li>Scan the code with your phone's camera.</li>
-          <li>Copy the page's address and open it in QoreX's browser.</li>
-          <li>This same scan opens there, ready to revoke.</li>
+          <li>It opens this same scan in the QoreX app, ready to revoke.</li>
         </ol>
         <button type="button" className="ghost" onClick={copy}>
           {copied ? "Copied ✓" : "Copy link instead"}
