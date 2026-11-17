@@ -10,16 +10,28 @@ export function App() {
   const { data: block } = useBlockNumber({ watch: true });
   return (
     <main>
-      <header className="top">
-        <div>
-          <h1>Unyoke</h1>
-          <p className="tagline">Find and remove every permission your QoreChain account has handed out, on both lanes.</p>
+      <nav className="nav">
+        <div className="brand">
+          <span className="brand-mark" aria-hidden />
+          unyoke
         </div>
-        <ConnectButton chainStatus="icon" showBalance={false} />
-      </header>
-      <p className="muted small">QoreChain testnet · latest block {block?.toLocaleString("en-US") ?? "…"}</p>
+        <div className="nav-right">
+          <span className="chip hide-sm">
+            <span className="dot" /> testnet · {block ? block.toLocaleString("en-US") : "…"}
+          </span>
+          <ConnectButton chainStatus="none" showBalance={false} accountStatus="address" />
+        </div>
+      </nav>
       <ScanPage />
-      {showSpike && <WindowSpike />}
+      {showSpike && (
+        <div className="spike">
+          <WindowSpike />
+        </div>
+      )}
+      <footer className="footer">
+        <span>Unyoke · built for Build Before Q-Day on QoreChain</span>
+        <span>MIT · reads public data · signing happens in your wallet</span>
+      </footer>
     </main>
   );
 }
