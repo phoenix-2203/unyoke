@@ -1,22 +1,13 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import {
   QORECHAIN_REST_ENDPOINTS,
-  classifyEvmWindowRejection,
   qorechainTestnet,
   evmWindowStatus,
-  type EvmWindowRejection,
 } from "@qorechain/evm";
 import { useQuery } from "@tanstack/react-query";
 import { formatEther } from "viem";
-import { useAccount, useBalance, useBlockNumber, useSendTransaction } from "wagmi";
+import { useAccount, useBalance, useBlockNumber } from "wagmi";
 import { WindowSpike } from "./spike/WindowSpike";
-
-const REMEDY: Record<EvmWindowRejection, string> = {
-  "no-pqc-key": "This account has no registered ML-DSA-87 key. Register one on the native lane first.",
-  "no-window": "No EVM authorisation window is open. Open one on the native lane, then retry.",
-  exhausted: "The window has run out of blocks, transactions or value. Open a new one.",
-  invalid: "The chain refused the window parameters.",
-};
 
 /**
  * The REST API of each chain, through the dev server's proxy (vite.config.ts):
@@ -57,8 +48,6 @@ export function App() {
   const { address, chainId, isConnected } = useAccount();
   const { data: balance } = useBalance({ address });
   const { data: block } = useBlockNumber({ watch: true });
-  const send = useSendTransaction();
-  const rejection = send.error ? classifyEvmWindowRejection(send.error) : undefined;
 
   return (
     <main style={{ fontFamily: "system-ui, sans-serif", maxWidth: 720, margin: "2rem auto", padding: "0 1rem" }}>
@@ -73,11 +62,6 @@ export function App() {
           </p>
           <p>Balance: {balance ? `${formatEther(balance.value)} QOR` : "..."}</p>
           <WindowStatus address={address} chainId={chainId} />
-          <button type="button" disabled={send.isPending} onClick={() => send.sendTransaction({ to: address, value: 0n })}>
-            Send 0 QOR to yourself
-          </button>
-          {send.data && <p>Sent: {send.data}</p>}
-          {send.error && <p>Refused: {rejection ? REMEDY[rejection] : send.error.message}</p>}
         </section>
       ) : (
         <p>Connect a wallet to read your account.</p>
