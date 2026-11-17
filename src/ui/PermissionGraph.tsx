@@ -1,8 +1,11 @@
 /**
  * The hero visual: your account in the middle, every permission it handed out
  * as a line to the spender. Risky lines glow; one by one they get cut
- * ("unyoked") and the spender greys out. Pure SVG + CSS, no data, decorative.
+ * ("unyoked") and the spender greys out. Pure SVG + CSS. Each spender links to
+ * the matching "what it checks" card; your account opens the scanner.
  */
+import { navigate } from "../router";
+
 type Edge = {
   id: string;
   x: number;
@@ -11,18 +14,21 @@ type Edge = {
   sub: string;
   level: "high" | "medium" | "low";
   cut?: 1 | 2 | 3;
+  /** Where tapping the node goes: the matching "what it checks" card. */
+  href: string;
+  title: string;
 };
 
 const CX = 450;
 const CY = 215;
 
 const EDGES: Edge[] = [
-  { id: "a", x: 120, y: 80, label: "fUSD", sub: "unlimited", level: "high", cut: 1 },
-  { id: "b", x: 780, y: 70, label: "authz", sub: "send · no limit", level: "high", cut: 2 },
-  { id: "c", x: 95, y: 330, label: "NFT", sub: "approve all", level: "high", cut: 3 },
-  { id: "d", x: 810, y: 345, label: "fee grant", sub: "no limit", level: "medium" },
-  { id: "e", x: 300, y: 390, label: "fETH", sub: "250", level: "medium" },
-  { id: "f", x: 625, y: 395, label: "vote", sub: "gov only", level: "low" },
+  { id: "a", x: 120, y: 80, label: "fUSD", sub: "unlimited", level: "high", cut: 1, href: "#check-erc20", title: "Token approvals" },
+  { id: "b", x: 780, y: 70, label: "authz", sub: "send · no limit", level: "high", cut: 2, href: "#check-authz", title: "Authz grants" },
+  { id: "c", x: 95, y: 330, label: "NFT", sub: "approve all", level: "high", cut: 3, href: "#check-nft", title: "NFT approve-all" },
+  { id: "d", x: 810, y: 345, label: "fee grant", sub: "no limit", level: "medium", href: "#check-feegrant", title: "Fee grants" },
+  { id: "e", x: 300, y: 390, label: "fETH", sub: "250", level: "medium", href: "#check-erc20", title: "Token approvals" },
+  { id: "f", x: 625, y: 395, label: "vote", sub: "gov only", level: "low", href: "#check-authz", title: "Authz grants" },
 ];
 
 /** A gentle curve from the account to the spender. */
@@ -34,8 +40,8 @@ function curve(e: Edge) {
 
 export function PermissionGraph() {
   return (
-    <div className="graph" aria-hidden>
-      <svg viewBox="0 0 900 440" preserveAspectRatio="xMidYMid meet">
+    <div className="graph">
+      <svg viewBox="0 0 900 440" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Your account and the permissions it has handed out">
         <defs>
           <radialGradient id="core" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="#d8ff5c" stopOpacity="0.35" />
@@ -55,6 +61,16 @@ export function PermissionGraph() {
             <path d={curve(e)} className="glow" filter="url(#soft)" />
             <path d={curve(e)} className="line" />
             <path d={curve(e)} className="flow" />
+            <a
+              href={e.href}
+              className="node-link"
+              aria-label={`${e.title}: what this permission is`}
+              onClick={(ev) => {
+                ev.preventDefault();
+                navigate(e.href);
+              }}
+            >
+            <title>{`${e.title}: tap to learn more`}</title>
             <g className="node" transform={`translate(${e.x} ${e.y})`}>
               <rect x="-70" y="-22" width="140" height="44" rx="12" />
               <circle cx="-52" cy="0" r="4" className="pip" />
@@ -70,19 +86,31 @@ export function PermissionGraph() {
                 </text>
               )}
             </g>
+            </a>
           </g>
         ))}
 
         {/* your account */}
         <circle cx={CX} cy={CY} r="90" fill="url(#core)" />
+        <a
+          href="/app"
+          className="me-link"
+          aria-label="Open the scanner"
+          onClick={(ev) => {
+            ev.preventDefault();
+            navigate("/app");
+          }}
+        >
+        <title>Scan an account</title>
         <g transform={`translate(${CX} ${CY})`} className="me">
           <circle r="34" />
           <path d="M-9 6V-2a9 9 0 0 1 18 0v2" className="me-shackle" />
           <rect x="-13" y="4" width="26" height="12" rx="3" className="me-body" />
           <text y="58" textAnchor="middle" className="me-label">
-            your account
+            your account · scan
           </text>
         </g>
+        </a>
       </svg>
     </div>
   );
