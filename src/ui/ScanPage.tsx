@@ -1,16 +1,14 @@
 import { qorechainTestnet } from "@qorechain/evm";
 import { useRef, useState } from "react";
 import { useAccount, usePublicClient } from "wagmi";
-import type { LiveApproval } from "../lib/evmApprovalState";
-import { formatTokenAmount, shortAddress } from "../lib/format";
-import type { NativePermission } from "../lib/nativePermissions";
-import { type Risk, type RiskLevel, evmApprovalRisk, nativePermissionRisk, sortByRisk } from "../lib/risk";
 import { type EvmClient, type ScanProgress, type ScanResult, scanAccount } from "../lib/scanAccount";
-import { Landing, PreviewCard } from "./Landing";
+import { Landing } from "./Landing";
+import { PermissionGraph } from "./PermissionGraph";
+import { Results } from "./Results";
+import { useReveal } from "./useReveal";
 
 /** Native REST through the dev/preview proxy (the public REST API sends no CORS headers). */
 const REST = "/lcd-testnet";
-const EXPLORER_TX = "https://explore.qore.network/tx/";
 /** A public testnet account with open permissions, for visitors without one. */
 const DEMO_ADDRESS = import.meta.env.VITE_DEMO_ADDRESS || "0x76dac5461ff361f911e5f39810c9455a6180c180";
 
@@ -22,7 +20,10 @@ export function ScanPage() {
   const [result, setResult] = useState<ScanResult>();
   const [error, setError] = useState<string>();
   const abort = useRef<AbortController>();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
   const scanning = progress !== undefined && progress.stage !== "done";
+  useReveal([result]);
 
   async function run(target: string) {
     if (!client) return setError("No connection to the QoreChain testnet.");
@@ -33,9 +34,9 @@ export function ScanPage() {
     setResult(undefined);
     setProgress({ stage: "history" });
     try {
-      setResult(
-        await scanAccount({ input: target, evm: client as unknown as EvmClient, rest: REST, signal: ctrl.signal, onProgress: setProgress }),
-      );
+      const r = await scanAccount({ input: target, evm: client as unknown as EvmClient, rest: REST, signal: ctrl.signal, onProgress: setProgress });
+      setResult(r);
+      requestAnimationFrame(() => resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
     } catch (e) {
       setError(ctrl.signal.aborted ? "Scan stopped." : e instanceof Error ? e.message : String(e));
       setProgress(undefined);
@@ -44,17 +45,18 @@ export function ScanPage() {
 
   return (
     <>
-      <div className="hero-grid">
       <section className="hero">
-        <span className="eyebrow">
-          <span className="dot" /> Q-Day hygiene for QoreChain
+        <span className="pill mono">
+          <span className="dot" /> Built for QoreChain
         </span>
         <h1>
-          Take back every permission <span className="dim">you've handed out.</span>
+          Take back every <span className="hl">permission</span>
+          <br />
+          you've <em>handed out.</em>
         </h1>
-        <p>
-          Token approvals on the EVM lane, authz and fee grants on the native lane. Unyoke finds them, tells you which ones are
-          risky, and helps you remove them.
+        <p className="lede">
+          Forgotten token approvals and grants are the open door on Q-Day. Unyoke finds every one on both lanes of QoreChain,
+          explains the risk, and helps you shut it.
         </p>
         <form
           className="scanbar"
@@ -63,10 +65,15 @@ export function ScanPage() {
             void run(input || connected || "");
           }}
         >
+          <svg className="scan-icon" viewBox="0 0 24 24" aria-hidden>
+            <circle cx="11" cy="11" r="7" />
+            <path d="M20 20l-3.5-3.5" />
+          </svg>
           <label htmlFor="addr" className="sr-only">
             Account address
           </label>
           <input
+            ref={inputRef}
             id="addr"
             value={input}
             placeholder={connected ?? "Paste a qor1… or 0x… address"}
@@ -85,7 +92,7 @@ export function ScanPage() {
           )}
         </form>
         <div className="hero-actions">
-          <p className="hint">Scanning only reads public data. No wallet needed.</p>
+          <span className="mono">read-only · no wallet needed</span>
           {!scanning && (
             <button
               type="button"
@@ -95,7 +102,7 @@ export function ScanPage() {
                 void run(DEMO_ADDRESS);
               }}
             >
-              Try a sample account
+              or try a sample account →
             </button>
           )}
         </div>
@@ -106,11 +113,25 @@ export function ScanPage() {
           </p>
         )}
       </section>
-      <PreviewCard />
+
+      <div ref={resultsRef}>
+        {result ? (
+          <section className="your-results reveal">
+            <Results r={result} />
+          </section>
+        ) : (
+          <div className="stage">
+            <PermissionGraph />
+          </div>
+        )}
       </div>
 
-      {result && <Results r={result} />}
-      <Landing />
+      <Landing
+        onScanClick={() => {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          setTimeout(() => inputRef.current?.focus(), 400);
+        }}
+      />
     </>
   );
 }
@@ -130,178 +151,6 @@ function Progress({ p }: { p: ScanProgress }) {
       <div className={`bar${pct === undefined ? " indeterminate" : ""}`}>
         <span style={pct !== undefined ? { width: `${pct}%` } : undefined} />
       </div>
-    </div>
-  );
-}
-
-function RiskTag({ level }: { level: RiskLevel }) {
-  return (
-    <span className={`risk ${level}`}>
-      <span className={`dot ${level}`} />
-      {level}
-    </span>
-  );
-}
-
-function Reasons({ risk }: { risk: Risk }) {
-  return (
-    <ul className="reasons">
-      {risk.reasons.map((r) => (
-        <li key={r}>{r}</li>
-      ))}
-    </ul>
-  );
-}
-
-function Results({ r }: { r: ScanResult }) {
-  const evm = sortByRisk(r.evm, (a) => evmApprovalRisk(a, r.scannedTo));
-  const native = sortByRisk(r.native, nativePermissionRisk);
-  const all = [...evm, ...native];
-  const count = (l: RiskLevel) => all.filter((x) => x.risk.level === l).length;
-
-  return (
-    <section className="results">
-      <div className="summary">
-        <div className="stat">
-          <div className="label">Open permissions</div>
-          <div className="value">{all.length}</div>
-        </div>
-        {(["high", "medium", "low"] as const).map((l) => (
-          <div className="stat" key={l}>
-            <div className="label">
-              <span className={`dot ${l}`} /> {l[0]!.toUpperCase() + l.slice(1)} risk
-            </div>
-            <div className="value">{count(l)}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="account-line">
-        <span>
-          Account <code>{r.account.evm}</code>
-        </span>
-        <span>
-          <code>{r.account.qor}</code>
-        </span>
-      </div>
-
-      {r.historyLimited && (
-        <div className="notice">
-          <span className="dot medium" />
-          <span>
-            The public testnet node keeps history only from block {r.scannedFrom.toLocaleString("en-US")}. Approvals made before
-            that can't be found from history by anyone using this node.
-          </span>
-        </div>
-      )}
-
-      <div className="lane">
-        <div className="lane-head">
-          <h2>EVM lane · token approvals</h2>
-          <span>
-            blocks {r.scannedFrom.toLocaleString("en-US")}–{r.scannedTo.toLocaleString("en-US")}
-          </span>
-        </div>
-        {r.evmError ? (
-          <p className="error">Could not read the EVM lane: {r.evmError}</p>
-        ) : evm.length === 0 ? (
-          <p className="empty">No open token approvals found.</p>
-        ) : (
-          evm.map(({ item, risk }) => <EvmRow key={`${item.kind}:${item.token}:${item.spender}`} a={item} risk={risk} />)
-        )}
-      </div>
-
-      <div className="lane">
-        <div className="lane-head">
-          <h2>Native lane · grants</h2>
-          <span>authz · fee grants · 7702 consent</span>
-        </div>
-        {r.nativeError ? (
-          <p className="error">Could not read the native lane: {r.nativeError}</p>
-        ) : native.length === 0 ? (
-          <p className="empty">No open grants found.</p>
-        ) : (
-          native.map(({ item, risk }, i) => <NativeRow key={i} p={item} risk={risk} />)
-        )}
-      </div>
-    </section>
-  );
-}
-
-function EvmRow({ a, risk }: { a: LiveApproval; risk: Risk }) {
-  const sym = a.tokenInfo.symbol ?? shortAddress(a.token);
-  const amount = a.kind === "operator" ? "Every NFT in this collection" : formatTokenAmount(a.amount, a.tokenInfo.decimals, sym);
-  const balance =
-    a.balance === undefined ? "balance unknown" : `you hold ${formatTokenAmount(a.balance, a.tokenInfo.decimals, a.kind === "operator" ? "NFTs" : sym)}`;
-  return (
-    <div className="row">
-      <RiskTag level={risk.level} />
-      <div>
-        <div className="cell-title">{sym}</div>
-        <div className="cell-sub mono">{shortAddress(a.token)}</div>
-      </div>
-      <div>
-        <div className="cell-title">{amount}</div>
-        <div className="cell-sub">{balance}</div>
-      </div>
-      <div>
-        <div className="cell-title mono">{shortAddress(a.spender)}</div>
-        <div className="cell-sub">
-          {a.spenderIsContract ? "contract" : "ordinary wallet"}
-          {a.setInTx && (
-            <>
-              {" · "}
-              <a href={`${EXPLORER_TX}${a.setInTx}`} target="_blank" rel="noreferrer">
-                set at block {a.setAtBlock.toLocaleString("en-US")}
-              </a>
-            </>
-          )}
-        </div>
-      </div>
-      <button type="button" className="danger" disabled title="Revoking arrives in the next build">
-        Revoke
-      </button>
-      <Reasons risk={risk} />
-    </div>
-  );
-}
-
-function NativeRow({ p, risk }: { p: NativePermission; risk: Risk }) {
-  const limit = (c?: { denom: string; amount: string }[]) => (c ? c.map((x) => `${x.amount} ${x.denom}`).join(", ") : "no limit");
-  const [title, sub, who, whoSub] =
-    p.kind === "eip7702"
-      ? ["EIP-7702 consent", p.live ? "active" : "expired", shortAddress(p.delegate), `expires at block ${p.expiryHeight.toLocaleString("en-US")}`]
-      : p.kind === "authz"
-        ? [
-            "Authz grant",
-            (p.msgTypeUrl ?? p.authorizationType).split(".").pop()!,
-            shortAddress(p.grantee),
-            `${p.spendLimit ? `up to ${limit(p.spendLimit)}` : "no spend limit"} · ${p.expiration ? `expires ${new Date(p.expiration).toLocaleDateString()}` : "never expires"}`,
-          ]
-        : [
-            "Fee grant",
-            limit(p.spendLimit),
-            shortAddress(p.grantee),
-            p.expiration ? `expires ${new Date(p.expiration).toLocaleDateString()}` : "never expires",
-          ];
-  return (
-    <div className="row">
-      <RiskTag level={risk.level} />
-      <div>
-        <div className="cell-title">{title}</div>
-        <div className="cell-sub mono">{sub}</div>
-      </div>
-      <div>
-        <div className="cell-title">granted to</div>
-        <div className="cell-sub mono">{who}</div>
-      </div>
-      <div>
-        <div className="cell-sub">{whoSub}</div>
-      </div>
-      <button type="button" className="danger" disabled title="Revoking arrives in the next build">
-        Revoke
-      </button>
-      <Reasons risk={risk} />
     </div>
   );
 }
