@@ -1736,3 +1736,34 @@ button.revoke:not(:disabled):hover {
 .receipt-window.tight {
   color: var(--low);
 }
+
+/* ---------- testnet sandbox ---------- */
+.sandbox {
+  margin-top: 2.5rem;
+  padding: 1.4rem;
+  border: 1px dashed var(--line);
+  border-radius: 18px;
+  display: grid;
+  gap: 1rem;
+}
+
+.sandbox h3 {
+  margin: 0.5rem 0 0.3rem;
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+}
+
+.sandbox p {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+.sandbox-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.sandbox .status-line {
+  grid-column: auto;
+}
