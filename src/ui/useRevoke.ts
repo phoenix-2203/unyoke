@@ -16,6 +16,7 @@ import { type NativePermission, readNativePermissions, revokeMessageFor } from "
 import { toQorexMessage } from "../lib/qorexMessage";
 import { type WindowEvidence, evmRevokeCall, parseWindowEvidence, permissionKey } from "../lib/revoke";
 import type { ScanResult } from "../lib/scanAccount";
+import { evmWindowBlocker, explainEvmError } from "./qorexEnv";
 
 export type RevokeState = "idle" | "signing" | "confirming" | "verifying" | "done" | "failed";
 
@@ -71,6 +72,8 @@ export function useRevoke(result: ScanResult | undefined, rest: string) {
       try {
         if (chainId !== qorechainTestnet.id) await switchChainAsync({ chainId: qorechainTestnet.id });
         set(key, { state: "signing" });
+        const blocked = await evmWindowBlocker(rest, result.account.qor, a.token);
+        if (blocked) throw new Error(blocked);
         const call = evmRevokeCall(a);
         const hash = await writeContractAsync({ ...call, chainId: qorechainTestnet.id } as Parameters<typeof writeContractAsync>[0]);
         set(key, { state: "confirming", txHash: hash });
@@ -103,7 +106,7 @@ export function useRevoke(result: ScanResult | undefined, rest: string) {
         ]);
       } catch (e) {
         const kind = classifyEvmWindowRejection(e);
-        set(key, { state: "failed", error: kind ? WINDOW_HELP[kind] : message(e) });
+        set(key, { state: "failed", error: kind ? WINDOW_HELP[kind] : explainEvmError(message(e)) });
       }
     },
     [client, result, chainId, switchChainAsync, writeContractAsync, rest],

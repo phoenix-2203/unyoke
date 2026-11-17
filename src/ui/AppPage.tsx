@@ -9,6 +9,7 @@ import { LINKS, Link, navigate } from "../router";
 import { DEMO_ADDRESS } from "./LandingPage";
 import { Receipt } from "./Receipt";
 import { TestSandbox } from "./TestSandbox";
+import { isQorexMobile } from "./qorexEnv";
 import { Results } from "./Results";
 import { useRevoke } from "./useRevoke";
 import { evmApprovalRisk, nativePermissionRisk } from "../lib/risk";
@@ -215,8 +216,7 @@ function Progress({ p }: { p: ScanProgress }) {
 
 /** Where revoking works today, said plainly. */
 function WalletHint() {
-  const inQorexBrowser = typeof window !== "undefined" && !!(window as { qorex?: unknown }).qorex && /Mobile|iPhone|Android/i.test(navigator.userAgent);
-  if (inQorexBrowser) return null;
+  if (isQorexMobile()) return null;
   return (
     <div className="notice subtle">
       <span className="dot" />

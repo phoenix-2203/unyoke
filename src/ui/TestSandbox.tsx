@@ -11,6 +11,7 @@ import { erc20Abi, maxUint256 } from "viem";
 import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { basicAllowance, genericAuthorization } from "../lib/grantEncoding";
 import { toQorexMessage } from "../lib/qorexMessage";
+import { evmWindowBlocker, explainEvmError } from "./qorexEnv";
 
 const FUSD = "0x97143B771D34ddb9130b807b135Ae675A5a963CA" as const;
 const DEAD = "0x000000000000000000000000000000000000dEaD" as const;
@@ -43,6 +44,8 @@ export function TestSandbox({ qor, evm, onDone }: { qor: string; evm: string; on
     try {
       if (job === "approval") {
         if (!address || address.toLowerCase() !== evm.toLowerCase()) throw new Error("Connect the wallet you scanned first.");
+        const blocked = await evmWindowBlocker("/lcd-testnet", qor, FUSD);
+        if (blocked) throw new Error(blocked);
         if (chainId !== qorechainTestnet.id) await switchChainAsync({ chainId: qorechainTestnet.id });
         const hash = await writeContractAsync({ address: FUSD, abi: erc20Abi, functionName: "approve", args: [DEAD, maxUint256], chainId: qorechainTestnet.id });
         await client?.waitForTransactionReceipt({ hash });
@@ -54,7 +57,7 @@ export function TestSandbox({ qor, evm, onDone }: { qor: string; evm: string; on
       setNote({ ok: true, text: "Created. Scanning again…" });
       onDone();
     } catch (e) {
-      setNote({ ok: false, text: message(e) });
+      setNote({ ok: false, text: job === "approval" ? explainEvmError(message(e)) : message(e) });
     } finally {
       setBusy(undefined);
     }
