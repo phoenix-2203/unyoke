@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "seed:demo": "node --env-file-if-exists=.env.seed --import tsx scripts/seed-demo.ts"
   },
   "dependencies": {
     "@qorechain/evm": "^0.14.0",
