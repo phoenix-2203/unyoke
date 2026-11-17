@@ -11,6 +11,12 @@ import { config } from "./wagmi.js";
 
 const queryClient = new QueryClient();
 
+// Development only: optional stand-in for QoreX on testnet (see src/dev/installQorexMock.ts).
+if (import.meta.env.DEV) {
+  const { installQorexMockIfConfigured } = await import("./dev/installQorexMock.js");
+  installQorexMockIfConfigured();
+}
+
 const container = document.getElementById("root");
 if (!container) {
   throw new Error("Root element #root not found");
