@@ -1615,3 +1615,124 @@ button.revoke {
 a.linkish {
   text-decoration: none;
 }
+
+/* ---------- revoke states, bulk bar, receipt ---------- */
+button.revoke.done {
+  color: var(--low);
+  border-color: rgba(74, 222, 128, 0.4);
+  opacity: 1;
+}
+
+button.revoke.signing,
+button.revoke.confirming,
+button.revoke.verifying {
+  color: var(--accent);
+  border-color: rgba(216, 255, 92, 0.4);
+  opacity: 1;
+}
+
+button.revoke:not(:disabled):hover {
+  background: rgba(255, 90, 90, 0.08);
+}
+
+.status-line {
+  grid-column: 2 / -1;
+  margin: -0.1rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.status-line.ok {
+  color: var(--low);
+}
+
+.status-line a {
+  color: inherit;
+}
+
+.status-line.muted {
+  color: var(--faint);
+}
+
+.bulkbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.9rem 1rem 0.9rem 1.2rem;
+  margin-bottom: 1rem;
+  border: 1px solid rgba(255, 90, 90, 0.3);
+  border-radius: 14px;
+  background: rgba(255, 90, 90, 0.05);
+}
+
+.bulkbar button {
+  background: var(--high);
+  border-color: var(--high);
+  color: #1a0505;
+}
+
+.notice.subtle {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--muted);
+  margin: 0 0 1rem;
+}
+
+.receipt {
+  margin-top: 2rem;
+  padding: 1.4rem;
+  border: 1px solid rgba(74, 222, 128, 0.3);
+  border-radius: 18px;
+  background:
+    radial-gradient(400px 200px at 0% 0%, rgba(74, 222, 128, 0.08), transparent 70%),
+    var(--surface);
+}
+
+.receipt-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.receipt-head h3 {
+  margin: 0.5rem 0 0;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+}
+
+.receipt ol {
+  margin: 1.1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.receipt li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 1rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--line-soft);
+  font-size: 0.86rem;
+}
+
+.receipt-what {
+  flex: 1;
+  min-width: 220px;
+}
+
+.receipt li a {
+  color: var(--muted);
+}
+
+.receipt-window {
+  color: var(--faint);
+  font-size: 0.78rem;
+}
+
+.receipt-window.tight {
+  color: var(--low);
+}
