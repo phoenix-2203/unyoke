@@ -9,7 +9,7 @@ import { LINKS, Link, navigate } from "../router";
 import { DEMO_ADDRESS } from "./LandingPage";
 import { Receipt } from "./Receipt";
 import { TestSandbox } from "./TestSandbox";
-import { isQorexMobile } from "./qorexEnv";
+import { PhoneHandoff } from "./PhoneHandoff";
 import { Results } from "./Results";
 import { useRevoke } from "./useRevoke";
 import { evmApprovalRisk, nativePermissionRisk } from "../lib/risk";
@@ -176,7 +176,7 @@ export function AppPage({ initialAddress }: { initialAddress?: string }) {
               </button>
             </div>
           )}
-          <WalletHint />
+          <PhoneHandoff address={result.account.qor} />
           <Results r={result} actions={{ status, evmBlocker, onRevokeEvm: revokeEvm, onRevokeNative: revokeNative }} />
           <Receipt account={result.account.evm} entries={receipt} />
           <TestSandbox qor={result.account.qor} evm={result.account.evm} onDone={() => run(result.account.qor)} />
@@ -210,21 +210,6 @@ function Progress({ p }: { p: ScanProgress }) {
       <div className={`bar${pct === undefined ? " indeterminate" : ""}`}>
         <span style={pct !== undefined ? { width: `${pct}%` } : undefined} />
       </div>
-    </div>
-  );
-}
-
-/** Where revoking works today, said plainly. */
-function WalletHint() {
-  if (isQorexMobile()) return null;
-  return (
-    <div className="notice subtle">
-      <span className="dot" />
-      <span>
-        <b>Revoking works best in the QoreX mobile app.</b> Open this page in its built-in browser: it signs native revokes with
-        your post-quantum key and opens a one-transaction window for each token revoke. The QoreX Chrome extension can't sign EVM
-        transactions yet, so on desktop use an EVM wallet with a window you opened in QoreX.
-      </span>
     </div>
   );
 }
