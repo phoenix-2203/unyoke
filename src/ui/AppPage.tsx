@@ -7,7 +7,10 @@ import { useAccount, usePublicClient } from "wagmi";
 import { type EvmClient, type ScanProgress, type ScanResult, scanAccount } from "../lib/scanAccount";
 import { LINKS, Link, navigate } from "../router";
 import { DEMO_ADDRESS } from "./LandingPage";
+import { Receipt } from "./Receipt";
 import { Results } from "./Results";
+import { useRevoke } from "./useRevoke";
+import { evmApprovalRisk, nativePermissionRisk } from "../lib/risk";
 import { ArrowUpRight, DropIcon, SearchIcon, WalletIcon } from "./icons";
 
 /** Native REST through the dev/preview proxy (the public REST API sends no CORS headers). */
@@ -22,6 +25,24 @@ export function AppPage({ initialAddress }: { initialAddress?: string }) {
   const [error, setError] = useState<string>();
   const abort = useRef<AbortController>();
   const scanning = progress !== undefined && progress.stage !== "done";
+  const { status, receipt, evmBlocker, revokeEvm, revokeNative } = useRevoke(result, REST);
+  const highRisk = result
+    ? {
+        evm: result.evm.filter((a) => evmApprovalRisk(a, result.scannedTo).level === "high"),
+        native: result.native.filter((p) => nativePermissionRisk(p).level === "high"),
+      }
+    : undefined;
+  const [bulk, setBulk] = useState(false);
+  async function revokeAllHigh() {
+    if (!highRisk) return;
+    setBulk(true);
+    try {
+      for (const p of highRisk.native) await revokeNative(p);
+      if (!evmBlocker) for (const a of highRisk.evm) await revokeEvm(a);
+    } finally {
+      setBulk(false);
+    }
+  }
 
   async function run(target: string) {
     if (!target) return;
@@ -136,7 +157,26 @@ export function AppPage({ initialAddress }: { initialAddress?: string }) {
 
       {result ? (
         <section className="your-results">
-          <Results r={result} />
+          {highRisk && highRisk.evm.length + highRisk.native.length > 0 && (
+            <div className="bulkbar">
+              <div>
+                <b>
+                  {highRisk.evm.length + highRisk.native.length} high-risk permission
+                  {highRisk.evm.length + highRisk.native.length === 1 ? "" : "s"}
+                </b>
+                <span className="muted">
+                  {" "}
+                  · each one is a separate approval in your wallet, and each is checked on chain afterwards
+                </span>
+              </div>
+              <button type="button" onClick={revokeAllHigh} disabled={bulk}>
+                {bulk ? "Revoking…" : "Revoke all high risk"}
+              </button>
+            </div>
+          )}
+          <WalletHint />
+          <Results r={result} actions={{ status, evmBlocker, onRevokeEvm: revokeEvm, onRevokeNative: revokeNative }} />
+          <Receipt account={result.account.evm} entries={receipt} />
         </section>
       ) : (
         !scanning && (
@@ -167,6 +207,22 @@ function Progress({ p }: { p: ScanProgress }) {
       <div className={`bar${pct === undefined ? " indeterminate" : ""}`}>
         <span style={pct !== undefined ? { width: `${pct}%` } : undefined} />
       </div>
+    </div>
+  );
+}
+
+/** Where revoking works today, said plainly. */
+function WalletHint() {
+  const inQorexBrowser = typeof window !== "undefined" && !!(window as { qorex?: unknown }).qorex && /Mobile|iPhone|Android/i.test(navigator.userAgent);
+  if (inQorexBrowser) return null;
+  return (
+    <div className="notice subtle">
+      <span className="dot" />
+      <span>
+        <b>Revoking works best in the QoreX mobile app.</b> Open this page in its built-in browser: it signs native revokes with
+        your post-quantum key and opens a one-transaction window for each token revoke. The QoreX Chrome extension can't sign EVM
+        transactions yet, so on desktop use an EVM wallet with a window you opened in QoreX.
+      </span>
     </div>
   );
 }
