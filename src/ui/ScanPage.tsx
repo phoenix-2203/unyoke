@@ -6,10 +6,13 @@ import { formatTokenAmount, shortAddress } from "../lib/format";
 import type { NativePermission } from "../lib/nativePermissions";
 import { type Risk, type RiskLevel, evmApprovalRisk, nativePermissionRisk, sortByRisk } from "../lib/risk";
 import { type EvmClient, type ScanProgress, type ScanResult, scanAccount } from "../lib/scanAccount";
+import { Landing, PreviewCard } from "./Landing";
 
 /** Native REST through the dev/preview proxy (the public REST API sends no CORS headers). */
 const REST = "/lcd-testnet";
 const EXPLORER_TX = "https://explore.qore.network/tx/";
+/** A public testnet account with open permissions, for visitors without one. */
+const DEMO_ADDRESS = import.meta.env.VITE_DEMO_ADDRESS || "0x76dac5461ff361f911e5f39810c9455a6180c180";
 
 export function ScanPage() {
   const { address: connected } = useAccount();
@@ -41,6 +44,7 @@ export function ScanPage() {
 
   return (
     <>
+      <div className="hero-grid">
       <section className="hero">
         <span className="eyebrow">
           <span className="dot" /> Q-Day hygiene for QoreChain
@@ -80,7 +84,21 @@ export function ScanPage() {
             </button>
           )}
         </form>
-        <p className="hint">Scanning only reads public data. No wallet needed.</p>
+        <div className="hero-actions">
+          <p className="hint">Scanning only reads public data. No wallet needed.</p>
+          {!scanning && (
+            <button
+              type="button"
+              className="linkish"
+              onClick={() => {
+                setInput(DEMO_ADDRESS);
+                void run(DEMO_ADDRESS);
+              }}
+            >
+              Try a sample account
+            </button>
+          )}
+        </div>
         {scanning && <Progress p={progress} />}
         {error && (
           <p className="error" role="alert">
@@ -88,8 +106,11 @@ export function ScanPage() {
           </p>
         )}
       </section>
+      <PreviewCard />
+      </div>
 
       {result && <Results r={result} />}
+      <Landing />
     </>
   );
 }
