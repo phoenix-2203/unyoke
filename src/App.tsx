@@ -13,12 +13,20 @@ export function App() {
     <main>
       <nav className="nav">
         <div className="brand">
-          <LogoMark size={24} />
+          <LogoMark size={26} />
           unyoke
+        </div>
+        <div className="nav-links">
+          <a href="https://docs.qorechain.io/developer-guide/evm-development" target="_blank" rel="noreferrer">
+            Why
+          </a>
+          <a href="https://github.com/phoenix-2203/unyoke" target="_blank" rel="noreferrer">
+            GitHub
+          </a>
         </div>
         <div className="nav-right">
           <span className="chip hide-sm">
-            <span className="dot" /> testnet · {block ? block.toLocaleString("en-US") : "…"}
+            <span className="dot" /> testnet {block ? `#${block.toLocaleString("en-US")}` : "…"}
           </span>
           <ConnectButton chainStatus="none" showBalance={false} accountStatus="address" />
         </div>
@@ -30,8 +38,10 @@ export function App() {
         </div>
       )}
       <footer className="footer">
-        <span>Unyoke · built for Build Before Q-Day on QoreChain</span>
-        <span>MIT · reads public data · signing happens in your wallet</span>
+        <span className="brand">
+          <LogoMark size={20} /> unyoke
+        </span>
+        <span>Built for Build Before Q-Day on QoreChain · MIT · reads public data, never your keys</span>
       </footer>
     </main>
   );
