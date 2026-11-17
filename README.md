@@ -172,9 +172,9 @@ Build Before Q-Day asks what breaks when quantum computers can recover private k
 **Honest limits:**
 - **Testnet only** for now. Mainnet is one setting away (both chains are defined) but hasn't been tested.
 - **History is pruned.** Approvals set before block 8,790,799 can't be found through the public node. Unyoke shows this on every scan. An indexer is on the roadmap.
-- **Revoking needs the QoreX mobile app** today. The QoreX Chrome extension has no testnet switch and doesn't sign EVM transactions yet; on desktop, Unyoke shows a QR code that opens the same scan on your phone, ready to revoke in QoreX.
+- **Revoking needs the QoreX mobile app** today. The QoreX Chrome extension has no testnet switch and doesn't sign EVM transactions yet; on desktop, Unyoke shows a QR code; your phone camera opens the same scan straight in the QoreX app (through QoreX's `link.qore.network/browse` link), ready to revoke.
 - **Clearing 7702 consent isn't tested yet.** Unyoke builds the `MsgClearEVMDelegation` message, but QoreX may refuse to display it, as it does `MsgCloseEVMWindow`. If it does, Unyoke shows that message instead of failing silently.
-- **Not audited.** It's a client-side tool with 72 unit tests, and it only ever sends revocations: setting things to zero or removing them.
+- **Not audited.** It's a client-side tool with 73 unit tests, and it only ever sends revocations: setting things to zero or removing them.
 
 ## Architecture
 
@@ -216,7 +216,7 @@ flowchart TB
 ```bash
 pnpm install
 pnpm dev            # http://localhost:5173 (proxies /lcd-testnet to the REST API)
-pnpm test           # 72 unit tests
+pnpm test           # 73 unit tests
 pnpm typecheck
 pnpm build
 ```
@@ -241,7 +241,6 @@ Demo data on a **throwaway** testnet account (never a real one; the script refus
 - **Mainnet**, once revokes are re-tested there.
 - **Clear 7702 consent** end to end, or a clear hand-off if QoreX won't display it.
 - **Watch mode:** a daily check that alerts when a new high-risk permission appears.
-- **One-tap hand-off into QoreX**, if QoreX adds a deep link for its browser (today the phone camera opens the link and you paste it into QoreX).
 - **Shareable receipts** with a link anyone can verify against the chain.
 
 ---
