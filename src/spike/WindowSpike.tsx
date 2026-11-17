@@ -17,6 +17,7 @@ import { erc20Abi, getAddress } from "viem";
 import { useAccount, useWriteContract } from "wagmi";
 import { encodeCloseWindow, encodeOpenWindow, planRevokeWindow } from "../lib/revokeWindow";
 import { toQorexMessage } from "../lib/qorexMessage";
+import { basicAllowance, genericAuthorization } from "../lib/grantEncoding";
 
 const FUSD = "0x97143B771D34ddb9130b807b135Ae675A5a963CA" as const;
 /** A burn-style address used only as the test spender: nobody holds its key. */
@@ -28,17 +29,7 @@ type Line = { at: string; text: string };
 /** Throwaway grantee for the native-lane tests: the qor1 form of 0x...dEaD. */
 const TEST_GRANTEE = toQorAddress(TEST_SPENDER);
 
-// Minimal protobuf for the two test grants (field 1/2 strings and a nested message).
-const enc = new TextEncoder();
-const lenField = (field: number, bytes: Uint8Array) => {
-  if (bytes.length > 127) throw new Error("test payload too long");
-  return Uint8Array.from([(field << 3) | 2, bytes.length, ...bytes]);
-};
-/** GenericAuthorization { msg } */
-const genericAuthorization = (msgTypeUrl: string) => lenField(1, enc.encode(msgTypeUrl));
-/** BasicAllowance { spend_limit: [Coin { denom, amount }] } */
-const basicAllowance = (denom: string, amount: string) =>
-  lenField(1, Uint8Array.from([...lenField(1, enc.encode(denom)), ...lenField(2, enc.encode(amount))]));
+
 
 export function WindowSpike() {
   const { address: evmAddress } = useAccount();
@@ -113,7 +104,7 @@ export function WindowSpike() {
           granter: qorAddress,
           grantee: TEST_GRANTEE,
           grant: {
-            authorization: { typeUrl: "/cosmos.authz.v1beta1.GenericAuthorization", value: genericAuthorization(msgTypeUrl) },
+            authorization: genericAuthorization(msgTypeUrl),
             expiration: { seconds: BigInt(Math.floor(Date.now() / 1000) + 86_400), nanos: 0 },
           },
         }),
@@ -132,7 +123,7 @@ export function WindowSpike() {
         feegrant.grant({
           granter: qorAddress,
           grantee: TEST_GRANTEE,
-          allowance: { typeUrl: "/cosmos.feegrant.v1beta1.BasicAllowance", value: basicAllowance("uqor", "1000") },
+          allowance: basicAllowance("uqor", "1000"),
         }),
       );
       await sendNative("fee grant revoke", feegrant.revoke({ granter: qorAddress, grantee: TEST_GRANTEE }));
