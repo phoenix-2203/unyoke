@@ -22,7 +22,13 @@ export default defineConfig(({ command, mode }) => {
   }
   return {
     plugins: [react()],
-    server: { port: 5173, proxy },
+    server: {
+      port: 5173,
+      proxy,
+      // Lets a Cloudflare quick tunnel (https://*.trycloudflare.com) reach the dev
+      // server, for testing inside the QoreX mobile dApp browser, which needs https.
+      allowedHosts: [".trycloudflare.com"],
+    },
     preview: { proxy },
     build: { target: "es2022" },
   };
