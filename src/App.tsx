@@ -1,6 +1,7 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useBlockNumber } from "wagmi";
 import { WindowSpike } from "./spike/WindowSpike";
+import { LogoMark } from "./ui/Logo";
 import { ScanPage } from "./ui/ScanPage";
 
 /** The day-1 wallet test page stays reachable at ?spike for re-testing QoreX. */
@@ -12,7 +13,7 @@ export function App() {
     <main>
       <nav className="nav">
         <div className="brand">
-          <span className="brand-mark" aria-hidden />
+          <LogoMark size={24} />
           unyoke
         </div>
         <div className="nav-right">
