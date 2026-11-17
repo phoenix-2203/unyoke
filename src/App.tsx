@@ -9,6 +9,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { formatEther } from "viem";
 import { useAccount, useBalance, useBlockNumber, useSendTransaction } from "wagmi";
+import { WindowSpike } from "./spike/WindowSpike";
 
 const REMEDY: Record<EvmWindowRejection, string> = {
   "no-pqc-key": "This account has no registered ML-DSA-87 key. Register one on the native lane first.",
@@ -81,6 +82,7 @@ export function App() {
       ) : (
         <p>Connect a wallet to read your account.</p>
       )}
+      <WindowSpike />
     </main>
   );
 }
