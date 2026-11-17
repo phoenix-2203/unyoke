@@ -86,8 +86,10 @@ export interface ScanOptions {
   fromBlock: bigint;
   toBlock: bigint;
   chunkSize?: bigint;
-  /** Called after each chunk with the last block read. */
-  onProgress?: (doneThrough: bigint, toBlock: bigint) => void;
+  /** How many chunks to request at once. Default 4. */
+  concurrency?: number;
+  /** Called as chunks finish with the number of blocks read so far and the total. */
+  onProgress?: (blocksDone: bigint, blocksTotal: bigint) => void;
   /** Stop early. */
   signal?: AbortSignal;
 }
@@ -98,23 +100,31 @@ export async function scanApprovalEvents(opts: ScanOptions): Promise<ApprovalEve
   if (chunk < 1n || chunk > MAX_LOG_RANGE) throw new Error(`chunkSize must be 1..${MAX_LOG_RANGE}`);
   if (opts.toBlock < opts.fromBlock) return [];
 
-  const ownerTopic = pad(opts.owner.toLowerCase() as Hex, { size: 32 });
-  const out: ApprovalEvent[] = [];
+  const ranges: [bigint, bigint][] = [];
   for (let start = opts.fromBlock; start <= opts.toBlock; start += chunk) {
-    if (opts.signal?.aborted) throw new Error("Scan stopped.");
-    const end = start + chunk - 1n < opts.toBlock ? start + chunk - 1n : opts.toBlock;
-    const logs = await opts.getLogs({
-      fromBlock: start,
-      toBlock: end,
-      topics: [[APPROVAL_TOPIC, APPROVAL_FOR_ALL_TOPIC], ownerTopic],
-    });
-    for (const log of logs) {
-      const ev = decodeApprovalLog(log);
-      if (ev && ev.owner === opts.owner.toLowerCase()) out.push(ev);
-    }
-    opts.onProgress?.(end, opts.toBlock);
+    ranges.push([start, start + chunk - 1n < opts.toBlock ? start + chunk - 1n : opts.toBlock]);
   }
-  return out;
+  const total = opts.toBlock - opts.fromBlock + 1n;
+  const ownerTopic = pad(opts.owner.toLowerCase() as Hex, { size: 32 });
+  const owner = opts.owner.toLowerCase();
+  const results: ApprovalEvent[][] = new Array(ranges.length);
+  let done = 0n;
+  let next = 0;
+
+  const worker = async () => {
+    while (next < ranges.length) {
+      if (opts.signal?.aborted) throw new Error("Scan stopped.");
+      const i = next++;
+      const [from, to] = ranges[i]!;
+      const logs = await opts.getLogs({ fromBlock: from, toBlock: to, topics: [[APPROVAL_TOPIC, APPROVAL_FOR_ALL_TOPIC], ownerTopic] });
+      results[i] = logs.map(decodeApprovalLog).filter((e): e is ApprovalEvent => !!e && e.owner === owner);
+      done += to - from + 1n;
+      opts.onProgress?.(done, total);
+    }
+  };
+  const n = Math.max(1, Math.min(opts.concurrency ?? 4, ranges.length));
+  await Promise.all(Array.from({ length: n }, worker));
+  return results.flat();
 }
 
 /** Keep the most recent event for each (kind, token, spender). */

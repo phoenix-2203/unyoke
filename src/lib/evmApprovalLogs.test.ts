@@ -74,6 +74,7 @@ describe("scanApprovalEvents", () => {
       owner: OWNER,
       fromBlock: 100n,
       toBlock: 25_099n,
+      concurrency: 1,
       getLogs: async (f) => {
         calls.push(f);
         return f.fromBlock === 100n ? [erc20Log(5n, 150n)] : [];
@@ -96,15 +97,31 @@ describe("scanApprovalEvents", () => {
         owner: OWNER,
         fromBlock: 0n,
         toBlock: 29_999n,
+        concurrency: 1,
         getLogs: async () => [],
         onProgress: (done) => {
           seen.push(done);
-          if (done >= 9_999n) ctrl.abort();
+          if (done >= 10_000n) ctrl.abort();
         },
         signal: ctrl.signal,
       }),
     ).rejects.toThrow(/stopped/);
-    expect(seen).toEqual([9_999n]);
+    expect(seen).toEqual([10_000n]);
+  });
+
+  it("reads chunks in parallel but returns events in block order", async () => {
+    const events = await scanApprovalEvents({
+      owner: OWNER,
+      fromBlock: 0n,
+      toBlock: 39_999n,
+      concurrency: 4,
+      getLogs: async (f) => {
+        // later chunks answer first
+        await new Promise((r) => setTimeout(r, Number(40_000n - f.fromBlock) / 4000));
+        return [erc20Log(1n, f.fromBlock)];
+      },
+    });
+    expect(events.map((e) => e.blockNumber)).toEqual([0n, 10_000n, 20_000n, 30_000n]);
   });
 
   it("refuses oversized chunks", async () => {
