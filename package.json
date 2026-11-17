@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "A Vite + React + wagmi dApp for the QoreChain EVM, with RainbowKit and the QoreX wallet.",
+  "description": "Find and remove every standing permission on a QoreChain account, on both lanes.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

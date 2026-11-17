@@ -4,7 +4,7 @@ import { defineConfig, loadEnv } from "vite";
 // The public REST APIs send no CORS headers, so the browser reaches them
 // through the dev (and preview) server: /lcd-testnet and /lcd-mainnet are
 // forwarded to each network's REST endpoint (see REST_PROXY in src/App.tsx).
-// In production, serve the app behind a proxy that does the same.
+// In production, Caddy does the same (deploy/Caddyfile).
 const rest = (target: string) => ({
   target,
   changeOrigin: true,
