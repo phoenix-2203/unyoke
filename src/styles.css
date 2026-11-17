@@ -1776,3 +1776,11 @@ button.revoke:not(:disabled):hover {
   margin: 0.9rem 0 0;
   font-size: 0.78rem;
 }
+
+.sandbox > * {
+  min-width: 0;
+}
+
+.sandbox p {
+  overflow-wrap: anywhere;
+}
