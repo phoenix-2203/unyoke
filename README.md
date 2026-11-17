@@ -174,7 +174,7 @@ Build Before Q-Day asks what breaks when quantum computers can recover private k
 - **History is pruned.** Approvals set before block 8,790,799 can't be found through the public node. Unyoke shows this on every scan. An indexer is on the roadmap.
 - **Revoking needs the QoreX mobile app** today. The QoreX Chrome extension has no testnet switch and doesn't sign EVM transactions yet; on desktop, use an EVM wallet with a window you opened in QoreX, or carry on from your phone.
 - **Clearing 7702 consent isn't tested yet.** Unyoke builds the `MsgClearEVMDelegation` message, but QoreX may refuse to display it, as it does `MsgCloseEVMWindow`. If it does, Unyoke shows that message instead of failing silently.
-- **Not audited.** It's a client-side tool with 70 unit tests, and it only ever sends revocations: setting things to zero or removing them.
+- **Not audited.** It's a client-side tool with 72 unit tests, and it only ever sends revocations: setting things to zero or removing them.
 
 ## Architecture
 
@@ -216,7 +216,7 @@ flowchart TB
 ```bash
 pnpm install
 pnpm dev            # http://localhost:5173 (proxies /lcd-testnet to the REST API)
-pnpm test           # 70 unit tests
+pnpm test           # 72 unit tests
 pnpm typecheck
 pnpm build
 ```
