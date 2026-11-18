@@ -12,7 +12,8 @@
 import { type Hex, toHex } from "viem";
 import { type AccountAddresses, parseAccount } from "./address";
 import { type GetLogs, earliestLogBlock, latestPerPair, scanApprovalEvents } from "./evmApprovalLogs";
-import { type ChainReader, type LiveApproval, readLiveApprovals } from "./evmApprovalState";
+import { type ChainReader, type LiveApproval, readLiveApprovals, readTokenInfo } from "./evmApprovalState";
+import { type EvmRevocation, type NativeRevocation, evmRevocations, readNativeRevocations } from "./history";
 import { type FetchLike, type NativePermission, readNativePermissions } from "./nativePermissions";
 
 /** What the scan needs from an EVM JSON-RPC client (a viem PublicClient fits). */
@@ -39,6 +40,8 @@ export interface ScanResult {
   /** Set when one lane failed; the other lane's results are still returned. */
   evmError?: string;
   nativeError?: string;
+  /** Permissions removed in the past (any tool), newest first, as far back as the node keeps history. */
+  history: { evm: EvmRevocation[]; native: NativeRevocation[]; nativeError?: string };
 }
 
 export interface ScanOptions {
@@ -74,12 +77,18 @@ export async function scanAccount(opts: ScanOptions): Promise<ScanResult> {
     (e) => ({ native: [] as NativePermission[], nativeError: message(e) }),
   );
 
+  const nativeHistoryPromise = readNativeRevocations(opts.rest, account.qor, opts.fetchFn).then(
+    (native) => ({ native }),
+    (e) => ({ native: [] as NativeRevocation[], nativeError: message(e) }),
+  );
+
   progress({ stage: "history" });
   let scannedFrom = 0n;
   let scannedTo = 0n;
   let historyLimited = false;
   let evm: LiveApproval[] = [];
   let evmError: string | undefined;
+  let evmHistory: EvmRevocation[] = [];
   try {
     const [head, earliest] = await Promise.all([opts.evm.getBlockNumber(), earliestLogBlock(getLogs)]);
     scannedTo = head;
@@ -96,6 +105,9 @@ export async function scanAccount(opts: ScanOptions): Promise<ScanResult> {
     });
     progress({ stage: "live" });
     evm = await readLiveApprovals(opts.evm, latestPerPair(events));
+    evmHistory = await Promise.all(
+      evmRevocations(events).map(async (r) => ({ ...r, tokenSymbol: (await readTokenInfo(opts.evm, r.token)).symbol })),
+    );
   } catch (e) {
     if (opts.signal?.aborted) throw e;
     evmError = message(e);
@@ -103,6 +115,16 @@ export async function scanAccount(opts: ScanOptions): Promise<ScanResult> {
 
   progress({ stage: "native" });
   const nativeResult = await nativePromise;
+  const nativeHistory = await nativeHistoryPromise;
   progress({ stage: "done" });
-  return { account, evm, scannedFrom, scannedTo, historyLimited, evmError, ...nativeResult };
+  return {
+    account,
+    evm,
+    scannedFrom,
+    scannedTo,
+    historyLimited,
+    evmError,
+    ...nativeResult,
+    history: { evm: evmHistory, ...nativeHistory },
+  };
 }

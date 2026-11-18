@@ -8,7 +8,7 @@ const SPENDER = "0x2222222222222222222222222222222222222222" as Hex;
 const FUSD = "0x97143b771d34ddb9130b807b135ae675a5a963ca" as Hex;
 const MAX = (1n << 256n) - 1n;
 
-function fakeEvm(opts: { pruneBelow?: bigint; failLogs?: boolean } = {}): EvmClient & { calls: unknown[] } {
+function fakeEvm(opts: { pruneBelow?: bigint; failLogs?: boolean; revokeAt?: bigint } = {}): EvmClient & { calls: unknown[] } {
   const calls: unknown[] = [];
   return {
     calls,
@@ -22,6 +22,18 @@ function fakeEvm(opts: { pruneBelow?: bigint; failLogs?: boolean } = {}): EvmCli
       const from = BigInt(f.fromBlock);
       if (opts.pruneBelow && from < opts.pruneBelow) {
         throw new Error(`height ${from} is not available, lowest height is ${opts.pruneBelow}`);
+      }
+      if (opts.revokeAt && from <= opts.revokeAt && BigInt(f.toBlock) >= opts.revokeAt) {
+        return [
+          {
+            address: FUSD,
+            topics: [APPROVAL_TOPIC, pad(OWNER.toLowerCase() as Hex, { size: 32 }), pad(SPENDER, { size: 32 })],
+            data: toHex(0n, { size: 32 }),
+            blockNumber: toHex(opts.revokeAt),
+            transactionHash: `0x${"ef".repeat(32)}`,
+            logIndex: "0x0",
+          },
+        ];
       }
       if (from <= 20_000n && BigInt(f.toBlock) >= 20_000n) {
         return [
@@ -94,5 +106,39 @@ describe("scanAccount", () => {
     });
     expect(r.evm).toHaveLength(1);
     expect(r.nativeError).toMatch(/502/);
+  });
+
+  it("returns the revoke history from both lanes", async () => {
+    const ME = "qor178yefzlrjy9hqgjt63tc5920wnp2hqyzlfcmzu";
+    const r = await scanAccount({
+      input: OWNER,
+      evm: fakeEvm({ revokeAt: 22_000n }),
+      rest: "https://rest.example",
+      fetchFn: async (url: string) => ({
+        ok: true,
+        status: 200,
+        json: async () =>
+          url.includes("/txs?")
+            ? {
+                tx_responses: [
+                  {
+                    txhash: "7d4f",
+                    height: "10",
+                    code: 0,
+                    tx: { body: { memo: "Unyoke: revoke", messages: [{ "@type": "/cosmos.authz.v1beta1.MsgRevoke", granter: ME, grantee: "qor1x" }] } },
+                  },
+                ],
+              }
+            : url.includes("authz")
+              ? { grants: [] }
+              : url.includes("feegrant")
+                ? { allowances: [] }
+                : { found: false },
+      }),
+    });
+    expect(r.history.evm).toEqual([
+      expect.objectContaining({ kind: "erc20", token: FUSD, spender: SPENDER, blockNumber: 22_000n, tokenSymbol: "fUSD" }),
+    ]);
+    expect(r.history.native).toEqual([expect.objectContaining({ kind: "authz", viaUnyoke: true, txHash: "7D4F" })]);
   });
 });
