@@ -148,6 +148,21 @@ All from the QoreX iOS app on `qorechain-diana`, account `qor178yef…mzu` (`0xF
 
 The approval and its revoke went through **different** windows, each used up by its single transaction. The allowance stayed open between them: a window protects the moment of sending, not what an approval leaves behind. The first experiments (window refusals, the first approve/revoke, `authz` and fee grant round trips) are in [docs/SPIKE_RESULTS.md](docs/SPIKE_RESULTS.md).
 
+### End-to-end check, run on testnet
+
+`pnpm e2e:testnet` on 18 November 2026, throwaway account `qor1w3yt7…egh`: **PASS, 18/18 checks**. It created three permissions, found them with Unyoke's scanner (fUSD approval rated high, unlimited fee grant medium, vote grant low), revoked each with the call or message Unyoke builds, then confirmed all three gone and listed in the revoke history.
+
+| Step | Transaction |
+|---|---|
+| Window for the approval (fUSD only, 1 tx) | [`8291D20652…D2040E`](https://unyoke.duckdns.org/tx/8291D206523F66513CC6DFC6AC43B6B071742455B511BCE2EE3FF11DFDD2040E) |
+| Unlimited fUSD approval | [`0xdfcf629e…c5b56d`](https://unyoke.duckdns.org/tx/0xdfcf629e5ecdfffe7d1fbc782c681cbeb098a28f9aad2b5d16a071dad2c5b56d) |
+| `authz` vote grant | [`CBF3D0E835…4568A1DC`](https://unyoke.duckdns.org/tx/CBF3D0E83554D49EC010C82BE5CBE5FB6C7E42E584F658FACB94A4754568A1DC) |
+| Fee grant, no limit | [`D95D9C95E0…D3F3820AF`](https://unyoke.duckdns.org/tx/D95D9C95E04993148B621498C0C79214F296A673DE1A91A2A5040DBD6F3820AF) |
+| Window for the revoke (fUSD only, 1 tx) | [`FF17CB23C9…163C0750`](https://unyoke.duckdns.org/tx/FF17CB23C92D04C2D23ED4BFB26F025C4D2DF4815F1B550DD1FED576163C0750) |
+| **Revoke:** `approve(spender, 0)` | [`0xc9e420f2…c3765d`](https://unyoke.duckdns.org/tx/0xc9e420f2b7d4382c03d76d636a8aed362d6c22fa969ef23044b026210d3c765d) |
+| **Revoke:** `MsgRevoke` | [`AB07F8FAC3…C145F0A5`](https://unyoke.duckdns.org/tx/AB07F8FAC3099D5C27EFCF0031AF26F5263E0C3BDFD0F7164BECFDC8C145F0A5) |
+| **Revoke:** `MsgRevokeAllowance` | [`9885D430E8…4C93E0EA`](https://unyoke.duckdns.org/tx/9885D430E86890173483ACB81A0B6D6E102A365B25188F5E39095EB54C93E0EA) |
+
 ## How it compares
 
 | | **Unyoke** | EVM revoke tools | Wallet approval warnings | Command line (`qorechaind`) |
