@@ -7,6 +7,7 @@ A QoreChain account can hand out *standing permissions*: a token approval to a c
 Unyoke reads both lanes for any address, tells you in plain words what each permission can do and how risky it is, and removes it in one tap from the QoreX wallet. After each removal it reads the chain again to prove the permission is gone, then adds it to a receipt you can keep.
 
 - **Try it:** https://unyoke.duckdns.org (QoreChain testnet; scan any address, revoke your own with QoreX: the phone app, or the browser extension on desktop)
+- **Sample account:** [`qor178yef…mzu`](https://unyoke.duckdns.org/app?address=qor178yefzlrjy9hqgjt63tc5920wnp2hqyzlfcmzu), left open on purpose: an unlimited fUSD approval, an `authz` send grant (up to 5 QOR), a vote grant and an unlimited fee grant, all to `0x…dEaD`, plus a revoke history made through Unyoke. It's what **Try a sample account** opens.
 - **Built for:** [Build Before Q-Day](https://build.qorechain.io), the **Quantum Pass** track
 - **Proven on testnet:** every kind of revoke below has a real transaction in [Proven on testnet](#proven-on-testnet)
 - **No keys, no server, no database.** Unyoke is a static site. Your wallet signs; Unyoke only reads.
@@ -92,7 +93,7 @@ The rules live in one tested file ([`src/lib/risk.ts`](src/lib/risk.ts)), so the
 
 ## Try it in two minutes
 
-You don't need any permissions of your own to see Unyoke work:
+You don't need any permissions of your own to see Unyoke work. To just look, open the [sample account](https://unyoke.duckdns.org/app?address=qor178yefzlrjy9hqgjt63tc5920wnp2hqyzlfcmzu). To revoke for real:
 
 1. Open https://unyoke.duckdns.org/app with QoreX on testnet, and scan your own account:
    - **Phone:** in the **QoreX app's built-in browser** (Settings → *Use testnet (developers)*). Everything works here.
