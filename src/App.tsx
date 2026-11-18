@@ -1,10 +1,11 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useBlockNumber } from "wagmi";
-import { LINKS, Link, useRoute } from "./router";
+import { LINKS, Link, txHashFromPath, useRoute } from "./router";
 import { WindowSpike } from "./spike/WindowSpike";
 import { AppPage } from "./ui/AppPage";
 import { LandingPage } from "./ui/LandingPage";
 import { LogoMark } from "./ui/Logo";
+import { TxPage } from "./ui/TxPage";
 import { ArrowRight, BookIcon, GitHubIcon, TrophyIcon } from "./ui/icons";
 
 /** The day-1 wallet test page stays reachable at ?spike for re-testing QoreX. */
@@ -22,6 +23,7 @@ export function App() {
   const { route, search } = useRoute();
   const { data: block } = useBlockNumber({ watch: true });
   const address = search.get("address") ?? undefined;
+  const txHash = route === "tx" ? txHashFromPath(window.location.pathname) : undefined;
 
   return (
     <main>
@@ -57,7 +59,13 @@ export function App() {
         </div>
       </nav>
 
-      {route === "app" ? <AppPage key={address ?? ""} initialAddress={address} /> : <LandingPage />}
+      {route === "app" ? (
+        <AppPage key={address ?? ""} initialAddress={address} />
+      ) : route === "tx" && txHash ? (
+        <TxPage key={txHash} hash={txHash} />
+      ) : (
+        <LandingPage />
+      )}
 
       {showSpike && (
         <div className="spike">
