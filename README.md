@@ -219,6 +219,7 @@ flowchart TB
 | `src/lib/explorer.ts` | EVM hash → Cosmos tx lookup, explorer link |
 | `src/ui/useRevoke.ts` | Sign → confirm → verify → receipt, with clear errors for window refusals |
 | `src/ui/` | Landing page, scanner, results, receipt, revoke history, transaction page, testnet sandbox, desktop-to-phone QR hand-off |
+| `scripts/e2e-testnet.ts` | `pnpm e2e:testnet`: create → scan → revoke → re-scan on testnet, with Unyoke's own code |
 | `scripts/seed-demo.ts` | Gives a throwaway testnet account a set of permissions for demos |
 | `deploy/` | Caddy site and a one-command VPS setup |
 | `docs/SPIKE_RESULTS.md` | What QoreX will and won't sign for a website, with transactions |
@@ -244,6 +245,14 @@ On a VPS that already runs Caddy (other sites are left alone; the config is chec
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/phoenix-2203/unyoke/main/deploy/setup.sh)
 ```
+
+**End-to-end check on testnet**, using Unyoke's own scanner and revoke code (about a minute, ~0.5 test QOR):
+
+```bash
+pnpm e2e:testnet
+```
+
+It creates an unlimited fUSD approval, an `authz` grant and a fee grant on a throwaway account, checks that Unyoke's scanner finds all three with the right risk, revokes each with the exact call or message Unyoke builds (the EVM one inside a window limited to fUSD and one transaction), then scans again: all three must be gone, listed in the revoke history, and the window record must show "this token only, 1 tx". The first run makes a brand-new throwaway account, saves its phrase to the git-ignored `.env.seed` and asks you to send it 1 test QOR; it registers the account's post-quantum key by itself. It refuses Unyoke's sample account.
 
 Demo data on a **throwaway** testnet account (never a real one; the script refuses accounts holding more than 50 QOR): put its phrase in a git-ignored `.env.seed` as `SEED_MNEMONIC`, then `pnpm seed:demo`.
 
