@@ -72,6 +72,8 @@ flowchart LR
 
 Each approval also shows the token's name and decimals, your current balance, whether the spender is a contract or an ordinary wallet, and the block and transaction that set it. Scanning the whole kept history (about 1.47 million testnet blocks) takes around 20 seconds.
 
+**Account kinds.** QoreX's default account is Cosmos-style (coin 118): its 0x form is only a re-encoding, it can't sign EVM transactions, so it can't give token approvals. Unyoke reads the account's key type from the chain and says so instead of offering token actions that would fail. Ethereum-style accounts (coin 60, *Add an Ethereum account* in QoreX) have both lanes.
+
 **Not included on purpose:** linked keys. Another Build Before Q-Day project already handles revoking those, and Unyoke shouldn't duplicate it.
 
 ## How risk is rated
@@ -179,7 +181,7 @@ Build Before Q-Day asks what breaks when quantum computers can recover private k
 - **History is pruned.** Approvals set before block 8,790,799 can't be found through the public node. Unyoke shows this on every scan. An indexer is on the roadmap.
 - **Token revokes on desktop need an extra step.** The QoreX extension revokes grants and fee grants on testnet (its testnet switch is hidden: tap the version number 7 times, then *Switch to testnet (diana)*), but it can't sign EVM transactions yet. For token approvals, Unyoke shows a QR code that opens the same scan straight in the QoreX app (through QoreX's `link.qore.network/browse` link); MetaMask or Rabby also work inside an EVM access window opened in QoreX.
 - **Clearing 7702 consent isn't tested yet.** Unyoke builds the `MsgClearEVMDelegation` message, but QoreX may refuse to display it, as it does `MsgCloseEVMWindow`. If it does, Unyoke shows that message instead of failing silently.
-- **Not audited.** It's a client-side tool with 84 unit tests, and it only ever sends revocations: setting things to zero or removing them.
+- **Not audited.** It's a client-side tool with 86 unit tests, and it only ever sends revocations: setting things to zero or removing them.
 
 ## Architecture
 
@@ -223,7 +225,7 @@ flowchart TB
 ```bash
 pnpm install
 pnpm dev            # http://localhost:5173 (proxies /lcd-testnet to the REST API)
-pnpm test           # 84 unit tests
+pnpm test           # 86 unit tests
 pnpm typecheck
 pnpm build
 ```
