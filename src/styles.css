@@ -2054,3 +2054,9 @@ button.revoke:not(:disabled):hover {
     gap: 0.1rem;
   }
 }
+
+.empty-note,
+.sandbox-note {
+  color: var(--faint);
+  font-size: 0.84rem;
+}

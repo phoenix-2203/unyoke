@@ -25,7 +25,18 @@ const message = (e: unknown) => (e instanceof Error ? (e as { shortMessage?: str
 /** What changed, so the page can refresh just that part instead of re-scanning everything. */
 export type SandboxUpdate = { lane: "native" } | { lane: "evm"; event: ApprovalEvent };
 
-export function TestSandbox({ qor, evm, onDone }: { qor: string; evm: string; onDone: (u: SandboxUpdate) => Promise<void> | void }) {
+export function TestSandbox({
+  qor,
+  evm,
+  canUseTokens,
+  onDone,
+}: {
+  qor: string;
+  evm: string;
+  /** False for Cosmos-style accounts, which can't sign EVM transactions. */
+  canUseTokens: boolean;
+  onDone: (u: SandboxUpdate) => Promise<void> | void;
+}) {
   const { chainId } = useAccount();
   const ensureAccount = useEnsureEvmAccount();
   const client = usePublicClient({ chainId: qorechainTestnet.id });
@@ -78,7 +89,13 @@ export function TestSandbox({ qor, evm, onDone }: { qor: string; evm: string; on
   }
 
   const btn = (job: Job, label: string) => (
-    <button type="button" className="ghost" disabled={!!busy} onClick={() => make(job)}>
+    <button
+      type="button"
+      className="ghost"
+      disabled={!!busy || (job === "approval" && !canUseTokens)}
+      title={job === "approval" && !canUseTokens ? "This Cosmos-style account can't sign EVM transactions" : undefined}
+      onClick={() => make(job)}
+    >
       {busy === job ? "Waiting for wallet…" : label}
     </button>
   );
@@ -98,6 +115,12 @@ export function TestSandbox({ qor, evm, onDone }: { qor: string; evm: string; on
         {btn("send", "Authz send grant (up to 5 QOR)")}
         {btn("feegrant", "Fee grant (no limit)")}
       </div>
+      {!canUseTokens && (
+        <p className="muted sandbox-note">
+          The fUSD approval needs an Ethereum-style account. This one is Cosmos-style (QoreX's default), so it can't sign EVM
+          transactions; in QoreX, use <i>Add an Ethereum account</i> for a token demo.
+        </p>
+      )}
       {note && <p className={`status-line ${note.ok ? "ok" : ""}`}>{note.text}</p>}
     </div>
   );

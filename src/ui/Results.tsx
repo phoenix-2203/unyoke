@@ -75,7 +75,16 @@ export function Results({ r, example = false, actions }: { r: ScanResult; exampl
         {r.evmError ? (
           <p className="error">Could not read the EVM lane: {r.evmError}</p>
         ) : evm.length === 0 ? (
-          <p className="empty">No open token approvals found.</p>
+          <p className="empty">
+            No open token approvals found.
+            {r.accountKind === "cosmos" && (
+              <span className="empty-note">
+                {" "}
+                This is a Cosmos-style account (QoreX's default kind), which can't sign EVM transactions, so it can't give token
+                approvals at all. To use tokens, add an Ethereum-style account in QoreX (<i>Add an Ethereum account</i>).
+              </span>
+            )}
+          </p>
         ) : (
           evm.map(({ item, risk }) => (
             <EvmRow key={`${item.kind}:${item.token}:${item.spender}`} a={item} risk={risk} example={example} actions={actions} />

@@ -198,7 +198,7 @@ export function AppPage({ initialAddress }: { initialAddress?: string }) {
           <Results r={result} actions={{ status, evmBlocker, onRevokeEvm: revokeEvm, onRevokeNative: revokeNative }} />
           <Receipt account={result.account.evm} entries={receipt} />
           <History r={result} />
-          <TestSandbox qor={result.account.qor} evm={result.account.evm} onDone={applySandbox} />
+          <TestSandbox qor={result.account.qor} evm={result.account.evm} canUseTokens={result.accountKind !== "cosmos"} onDone={applySandbox} />
         </section>
       ) : (
         !scanning && (
