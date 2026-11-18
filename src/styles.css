@@ -526,16 +526,10 @@ button.revoke {
   fill: var(--accent);
 }
 
-.me-shackle {
-  fill: none;
-  stroke: var(--accent-ink);
-  stroke-width: 3.2;
-  stroke-linecap: round;
-}
-
-.me-body {
+.me-u {
   fill: var(--accent-ink);
 }
+
 
 .me-label {
   fill: var(--text);

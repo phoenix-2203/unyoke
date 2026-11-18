@@ -104,8 +104,11 @@ export function PermissionGraph() {
         <title>Scan an account</title>
         <g transform={`translate(${CX} ${CY})`} className="me">
           <circle r="34" />
-          <path d="M-9 6V-2a9 9 0 0 1 18 0v2" className="me-shackle" />
-          <rect x="-13" y="4" width="26" height="12" rx="3" className="me-body" />
+          {/* the Unyoke "U", from the logo */}
+          <g transform="translate(-19 -19) scale(0.032)" className="me-u">
+            <path d="M282 317H537V657A229.5 229.5 0 0 0 766.5 886.5L797 884A318 318 0 0 1 282 637Z" />
+            <path d="M615 317H918V657A151.5 151.5 0 0 1 615 657Z" />
+          </g>
           <text y="58" textAnchor="middle" className="me-label">
             your account · scan
           </text>

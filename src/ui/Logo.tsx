@@ -1,22 +1,13 @@
 /**
- * Unyoke's mark: an unlocked shackle that doubles as a "U". The right arm is
- * lifted out of its socket, so the yoke is open.
+ * Unyoke's mark: a "U" whose right arm has come free of the bowl around it,
+ * like a yoke lifted off. Lime on near-black; the same drawing as favicon.svg.
  */
 export function LogoMark({ size = 24 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 32 32" role="img" aria-label="Unyoke logo">
-      <rect width="32" height="32" rx="8" fill="var(--text, #ece8e1)" />
-      {/* socket */}
-      <rect x="7" y="20" width="18" height="6" rx="2" fill="var(--bg, #0a0b0d)" />
-      {/* shackle: left arm in the socket, right arm lifted out */}
-      <path
-        d="M10.5 21V13a5.5 5.5 0 0 1 11 0v1.5"
-        fill="none"
-        stroke="var(--bg, #0a0b0d)"
-        strokeWidth="2.6"
-        strokeLinecap="round"
-      />
-      <circle cx="21.5" cy="18" r="1.4" fill="var(--bg, #0a0b0d)" />
+    <svg width={size} height={size} viewBox="0 0 1200 1200" role="img" aria-label="Unyoke logo">
+      <rect width="1200" height="1200" rx="300" fill="#0e0f11" />
+      <path fill="var(--accent, #d8ff5c)" d="M282 317H537V657A229.5 229.5 0 0 0 766.5 886.5L797 884A318 318 0 0 1 282 637Z" />
+      <path fill="var(--accent, #d8ff5c)" d="M615 317H918V657A151.5 151.5 0 0 1 615 657Z" />
     </svg>
   );
 }
