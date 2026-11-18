@@ -68,9 +68,6 @@ export function Receipt({ account, entries }: { account: string; entries: Receip
           </li>
         ))}
       </ol>
-      <p className="receipt-note muted">
-        Transaction links open the QoreChain explorer, which starts on mainnet: choose <b>Testnet</b> at the top to see them.
-      </p>
     </section>
   );
 }
