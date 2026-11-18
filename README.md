@@ -6,7 +6,7 @@ A QoreChain account can hand out *standing permissions*: a token approval to a c
 
 Unyoke reads both lanes for any address, tells you in plain words what each permission can do and how risky it is, and removes it in one tap from the QoreX wallet. After each removal it reads the chain again to prove the permission is gone, then adds it to a receipt you can keep.
 
-- **Try it:** https://unyoke.duckdns.org (QoreChain testnet; scan any address, revoke your own from the QoreX app)
+- **Try it:** https://unyoke.duckdns.org (QoreChain testnet; scan any address, revoke your own with QoreX: the phone app, or the browser extension on desktop)
 - **Built for:** [Build Before Q-Day](https://build.qorechain.io), the **Quantum Pass** track
 - **Proven on testnet:** every kind of revoke below has a real transaction in [Proven on testnet](#proven-on-testnet)
 - **No keys, no server, no database.** Unyoke is a static site. Your wallet signs; Unyoke only reads.
@@ -58,6 +58,7 @@ flowchart LR
 3. **Revoke.** One button per permission, or **Revoke all high risk**. Each is a separate approval in your wallet; Unyoke never batches anything you didn't see.
 4. **Verify.** After the transaction confirms, Unyoke reads the allowance or the grant again. Only then does it say **Revoked ✓**.
 5. **Keep a receipt.** Every removal is listed with its transaction and, for token revokes, the exact window QoreX opened ("this token only, 1 tx, used up"). **Copy receipt** gives you a markdown table.
+6. **See the history.** Each scan also lists the permissions this account has already removed, read from the chain: allowances set to 0, approve-all turned off, and `authz`, fee-grant and 7702 revokes. It includes revokes made with any tool, marks the ones sent through Unyoke, and looks the same to anyone who scans the address.
 
 ## What it finds
 
@@ -91,10 +92,12 @@ The rules live in one tested file ([`src/lib/risk.ts`](src/lib/risk.ts)), so the
 
 You don't need any permissions of your own to see Unyoke work:
 
-1. Open https://unyoke.duckdns.org/app in the **QoreX app's built-in browser**, on testnet, and scan your own account.
+1. Open https://unyoke.duckdns.org/app with QoreX on testnet, and scan your own account:
+   - **Phone:** in the **QoreX app's built-in browser** (Settings → *Use testnet (developers)*). Everything works here.
+   - **Desktop:** with the **QoreX browser extension**. Its testnet switch is hidden: tap the version number at the bottom 7 times to turn on Developer mode, then *Switch to testnet (diana)*. Grants and fee grants revoke here; for token approvals, scan the QR code Unyoke shows and finish on your phone.
 2. Scroll to **Testnet sandbox** and tap one of: **Unlimited fUSD approval**, **Authz grant (vote, no expiry)** or **Fee grant (no limit)**. Each goes to `0x…dEaD`, an address nobody controls, using worthless testnet tokens. Unyoke scans again when it's done.
 3. Tap **Revoke** on the new permission, approve it in QoreX, and watch the status go *signing → confirming → verifying → Revoked ✓*.
-4. Read the receipt at the bottom.
+4. Read the receipt, then scan again: the revoke now shows in the account's **revoke history**.
 
 Need testnet QOR? Use the [faucet](https://docs.qorechain.io/dashboard/faucet).
 
@@ -104,7 +107,8 @@ QoreChain admits an EVM transaction only if the sender has a registered **ML-DSA
 
 - **Websites can't open or close windows.** QoreX refuses `MsgOpenEVMWindow` from a site ("managed by the wallet itself") and won't sign `MsgCloseEVMWindow`.
 - **QoreX mobile opens one window per EVM transaction, by itself,** limited to the one contract being called, **1 transaction, 100 blocks**, and a value cap equal to that transaction's fee. That's tighter than anything Unyoke could have asked for, so Unyoke simply reads the window back and shows it on the receipt.
-- **Native revokes are signed with the hybrid secp256k1 + ML-DSA-87 signature** through QoreX's `signAndBroadcast`.
+- **Native revokes are signed with the hybrid secp256k1 + ML-DSA-87 signature** through QoreX's `signAndBroadcast`, from the phone app or the browser extension.
+- **The browser extension doesn't sign EVM transactions yet** (QoreX's docs say so). So on desktop, Unyoke checks the account's window before asking any EVM wallet to sign, and hands token revokes to the phone with a QR code that opens the same scan in the QoreX app. MetaMask or Rabby also work inside an EVM access window opened in QoreX.
 
 ```mermaid
 sequenceDiagram
@@ -150,6 +154,7 @@ The approval and its revoke went through **different** windows, each used up by 
 | Checks the permission is really gone | ✅ reads it again | Usually not | n/a | ❌ |
 | Shows the post-quantum window used | ✅ on the receipt | ❌ | ❌ | ❌ |
 | Plain-language risk | ✅ tested rules | Varies | Varies | ❌ |
+| Revoke history for the account | ✅ both lanes, any tool | Some, EVM only | ❌ | ❌ |
 | Needs a terminal or keys on disk | No | No | No | Yes |
 
 **What we learned from others (not copied):** revoke.cash's list of approvals by token and spender, and Rabby's habit of explaining what a signature does in one sentence. What none of them do is cover both of QoreChain's lanes and prove each removal on chain.
@@ -174,13 +179,13 @@ Build Before Q-Day asks what breaks when quantum computers can recover private k
 - **History is pruned.** Approvals set before block 8,790,799 can't be found through the public node. Unyoke shows this on every scan. An indexer is on the roadmap.
 - **Token revokes on desktop need an extra step.** The QoreX extension revokes grants and fee grants on testnet (its testnet switch is hidden: tap the version number 7 times, then *Switch to testnet (diana)*), but it can't sign EVM transactions yet. For token approvals, Unyoke shows a QR code that opens the same scan straight in the QoreX app (through QoreX's `link.qore.network/browse` link); MetaMask or Rabby also work inside an EVM access window opened in QoreX.
 - **Clearing 7702 consent isn't tested yet.** Unyoke builds the `MsgClearEVMDelegation` message, but QoreX may refuse to display it, as it does `MsgCloseEVMWindow`. If it does, Unyoke shows that message instead of failing silently.
-- **Not audited.** It's a client-side tool with 73 unit tests, and it only ever sends revocations: setting things to zero or removing them.
+- **Not audited.** It's a client-side tool with 80 unit tests, and it only ever sends revocations: setting things to zero or removing them.
 
 ## Architecture
 
 ```mermaid
 flowchart TB
-    subgraph Phone["QoreX mobile (dApp browser)"]
+    subgraph Phone["QoreX: mobile dApp browser or browser extension"]
         UI["Unyoke — React + wagmi + viem"]
         W["QoreX: EIP-1193 + native signAndBroadcast<br/>hybrid secp256k1 + ML-DSA-87"]
     end
@@ -204,9 +209,10 @@ flowchart TB
 | `src/lib/nativePermissions.ts` | Reads and parses `authz`, fee grants and 7702 consent; builds revoke messages |
 | `src/lib/risk.ts` | The risk rules |
 | `src/lib/revoke.ts` | Revoke calls, permission keys, and reading the window back as evidence |
+| `src/lib/history.ts` | Revoke history: zeroed approvals from the log scan, native revokes from the tx search |
 | `src/lib/explorer.ts` | Explorer links, including EVM hash → Cosmos tx lookup |
 | `src/ui/useRevoke.ts` | Sign → confirm → verify → receipt, with clear errors for window refusals |
-| `src/ui/` | Landing page, scanner, results, receipt, testnet sandbox, desktop-to-phone QR hand-off |
+| `src/ui/` | Landing page, scanner, results, receipt, revoke history, testnet sandbox, desktop-to-phone QR hand-off |
 | `scripts/seed-demo.ts` | Gives a throwaway testnet account a set of permissions for demos |
 | `deploy/` | Caddy site and a one-command VPS setup |
 | `docs/SPIKE_RESULTS.md` | What QoreX will and won't sign for a website, with transactions |
@@ -216,12 +222,12 @@ flowchart TB
 ```bash
 pnpm install
 pnpm dev            # http://localhost:5173 (proxies /lcd-testnet to the REST API)
-pnpm test           # 73 unit tests
+pnpm test           # 80 unit tests
 pnpm typecheck
 pnpm build
 ```
 
-To test from the QoreX app on your phone, which needs HTTPS:
+To test from the QoreX app on your phone (its browser needs HTTPS):
 
 ```bash
 cloudflared tunnel --url http://localhost:5173   # open the printed https link in QoreX
