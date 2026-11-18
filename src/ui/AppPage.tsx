@@ -7,6 +7,7 @@ import { useAccount, usePublicClient } from "wagmi";
 import { type EvmClient, type ScanProgress, type ScanResult, scanAccount } from "../lib/scanAccount";
 import { LINKS, Link, navigate } from "../router";
 import { DEMO_ADDRESS } from "./LandingPage";
+import { History } from "./History";
 import { Receipt } from "./Receipt";
 import { TestSandbox } from "./TestSandbox";
 import { PhoneHandoff } from "./PhoneHandoff";
@@ -179,6 +180,7 @@ export function AppPage({ initialAddress }: { initialAddress?: string }) {
           <PhoneHandoff address={result.account.qor} />
           <Results r={result} actions={{ status, evmBlocker, onRevokeEvm: revokeEvm, onRevokeNative: revokeNative }} />
           <Receipt account={result.account.evm} entries={receipt} />
+          <History r={result} />
           <TestSandbox qor={result.account.qor} evm={result.account.evm} onDone={() => run(result.account.qor)} />
         </section>
       ) : (
