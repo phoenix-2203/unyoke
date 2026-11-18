@@ -22,7 +22,7 @@
  */
 import { toQorAddress } from "@qorechain/evm";
 import { authz, feegrant } from "@qorechain/sdk";
-import { type Hex, encodeFunctionData, erc20Abi, maxUint256 } from "viem";
+import { type Hex, encodeFunctionData, erc20Abi, getAddress, maxUint256 } from "viem";
 import { basicAllowance, genericAuthorization } from "../src/lib/grantEncoding";
 import { readNativeRevocations } from "../src/lib/history";
 import { revokeMessageFor } from "../src/lib/nativePermissions";
@@ -32,7 +32,7 @@ import { type EvmClient, type ScanResult, scanAccount } from "../src/lib/scanAcc
 import { FUSD, MAX_FEE_PER_GAS, REST, loadTestAccount, rest } from "./lib/testnet";
 
 /** Spender and grantee for this run: an address nobody controls, distinct from the sandbox's 0x…dEaD. */
-const SPENDER = "0x00000000000000000000000000000000000E2E01" as const;
+const SPENDER = getAddress("0x00000000000000000000000000000000000e2e01");
 const GRANTEE = toQorAddress(SPENDER);
 const VOTE = "/cosmos.gov.v1.MsgVote";
 
