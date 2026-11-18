@@ -20,6 +20,7 @@ export const SAMPLE_SCAN: ScanResult = {
   scannedFrom: 8_790_799n,
   scannedTo: HEAD,
   historyLimited: true,
+  accountKind: "ethereum",
   history: { evm: [], native: [] },
   evm: [
     {

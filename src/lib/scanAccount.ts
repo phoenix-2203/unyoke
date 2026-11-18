@@ -10,6 +10,7 @@
  * is, so the UI can be honest about it.
  */
 import { type Hex, toHex } from "viem";
+import { type AccountKind, readAccountKind } from "./accountKind";
 import { type AccountAddresses, parseAccount } from "./address";
 import { type GetLogs, earliestLogBlock, latestPerPair, scanApprovalEvents } from "./evmApprovalLogs";
 import { type ChainReader, type LiveApproval, readLiveApprovals, readTokenInfo } from "./evmApprovalState";
@@ -30,6 +31,8 @@ export interface ScanProgress {
 
 export interface ScanResult {
   account: AccountAddresses;
+  /** Ethereum-style accounts can have token approvals; Cosmos-style ones can't sign EVM transactions. */
+  accountKind: AccountKind;
   evm: LiveApproval[];
   native: NativePermission[];
   /** First and last block whose EVM logs were read. */
@@ -77,6 +80,7 @@ export async function scanAccount(opts: ScanOptions): Promise<ScanResult> {
     (e) => ({ native: [] as NativePermission[], nativeError: message(e) }),
   );
 
+  const kindPromise = readAccountKind(opts.rest, account.qor, opts.fetchFn);
   const nativeHistoryPromise = readNativeRevocations(opts.rest, account.qor, opts.fetchFn).then(
     (native) => ({ native }),
     (e) => ({ native: [] as NativeRevocation[], nativeError: message(e) }),
@@ -116,9 +120,11 @@ export async function scanAccount(opts: ScanOptions): Promise<ScanResult> {
   progress({ stage: "native" });
   const nativeResult = await nativePromise;
   const nativeHistory = await nativeHistoryPromise;
+  const accountKind = await kindPromise;
   progress({ stage: "done" });
   return {
     account,
+    accountKind,
     evm,
     scannedFrom,
     scannedTo,
