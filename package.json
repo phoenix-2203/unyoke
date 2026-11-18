@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "seed:demo": "node --env-file-if-exists=.env.seed --import tsx scripts/seed-demo.ts"
+    "seed:demo": "node --env-file-if-exists=.env.seed --import tsx scripts/seed-demo.ts",
+    "e2e:testnet": "node --env-file-if-exists=.env.seed --import tsx scripts/e2e-testnet.ts"
   },
   "dependencies": {
     "@qorechain/evm": "^0.14.0",
