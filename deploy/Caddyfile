@@ -18,6 +18,11 @@ unyoke.duckdns.org {
 	@assets path /assets/*
 	header @assets Cache-Control "public, max-age=31536000, immutable"
 
+	# Everything else (index.html and the app routes) is checked on every visit,
+	# so a new deploy shows up on the next reload instead of a stale cached page.
+	@pages not path /assets/* /lcd-testnet/*
+	header @pages Cache-Control "no-cache"
+
 	header {
 		X-Content-Type-Options nosniff
 		Referrer-Policy strict-origin-when-cross-origin
