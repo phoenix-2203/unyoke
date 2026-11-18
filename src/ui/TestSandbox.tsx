@@ -9,7 +9,7 @@ import { authz, feegrant } from "@qorechain/sdk";
 import { useState } from "react";
 import { erc20Abi, maxUint256 } from "viem";
 import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
-import { basicAllowance, genericAuthorization } from "../lib/grantEncoding";
+import { basicAllowance, genericAuthorization, sendAuthorization } from "../lib/grantEncoding";
 import { toQorexMessage } from "../lib/qorexMessage";
 import { evmWindowBlocker, explainEvmError } from "./qorexEnv";
 
@@ -17,7 +17,7 @@ const FUSD = "0x97143B771D34ddb9130b807b135Ae675A5a963CA" as const;
 const DEAD = "0x000000000000000000000000000000000000dEaD" as const;
 const DEAD_QOR = toQorAddress(DEAD);
 
-type Job = "approval" | "authz" | "feegrant";
+type Job = "approval" | "authz" | "send" | "feegrant";
 const message = (e: unknown) => (e instanceof Error ? (e as { shortMessage?: string }).shortMessage ?? e.message : String(e));
 
 export function TestSandbox({ qor, evm, onDone }: { qor: string; evm: string; onDone: () => void }) {
@@ -49,6 +49,8 @@ export function TestSandbox({ qor, evm, onDone }: { qor: string; evm: string; on
         if (chainId !== qorechainTestnet.id) await switchChainAsync({ chainId: qorechainTestnet.id });
         const hash = await writeContractAsync({ address: FUSD, abi: erc20Abi, functionName: "approve", args: [DEAD, maxUint256], chainId: qorechainTestnet.id });
         await client?.waitForTransactionReceipt({ hash });
+      } else if (job === "send") {
+        await native(job, authz.grant({ granter: qor, grantee: DEAD_QOR, grant: { authorization: sendAuthorization("uqor", "5000000") } }));
       } else if (job === "authz") {
         await native(job, authz.grant({ granter: qor, grantee: DEAD_QOR, grant: { authorization: genericAuthorization("/cosmos.gov.v1.MsgVote") } }));
       } else {
@@ -81,6 +83,7 @@ export function TestSandbox({ qor, evm, onDone }: { qor: string; evm: string; on
       <div className="sandbox-actions">
         {btn("approval", "Unlimited fUSD approval")}
         {btn("authz", "Authz grant (vote, no expiry)")}
+        {btn("send", "Authz send grant (up to 5 QOR)")}
         {btn("feegrant", "Fee grant (no limit)")}
       </div>
       {note && <p className={`status-line ${note.ok ? "ok" : ""}`}>{note.text}</p>}
