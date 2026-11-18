@@ -1853,3 +1853,76 @@ button.revoke:not(:disabled):hover {
   font-weight: 600;
   text-decoration: none;
 }
+
+/* ---------- revoke history ---------- */
+.history {
+  margin-top: 2rem;
+  padding: 1.4rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+}
+
+.history-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.history-head h3 {
+  margin: 0.5rem 0 0;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+.history-badge {
+  padding: 0.3rem 0.7rem;
+  border: 1px solid rgba(216, 255, 92, 0.35);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 0.78rem;
+}
+
+.history-note {
+  margin: 0.6rem 0 0;
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.history ol {
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.history li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.7rem 0;
+  border-top: 1px solid var(--line-soft);
+  font-size: 0.86rem;
+}
+
+.history-what {
+  flex: 1;
+  min-width: 220px;
+  overflow-wrap: anywhere;
+}
+
+.history-via {
+  color: var(--accent);
+  font-size: 0.76rem;
+}
+
+.history-when {
+  color: var(--faint);
+  font-size: 0.76rem;
+}
+
+.history-tx {
+  color: var(--muted);
+}
