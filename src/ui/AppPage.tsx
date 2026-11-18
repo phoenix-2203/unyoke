@@ -9,7 +9,9 @@ import { LINKS, Link, navigate } from "../router";
 import { DEMO_ADDRESS } from "./LandingPage";
 import { History } from "./History";
 import { Receipt } from "./Receipt";
-import { TestSandbox } from "./TestSandbox";
+import { type SandboxUpdate, TestSandbox } from "./TestSandbox";
+import { type LiveApproval, readLiveApprovals } from "../lib/evmApprovalState";
+import { readNativePermissions } from "../lib/nativePermissions";
 import { PhoneHandoff } from "./PhoneHandoff";
 import { Results } from "./Results";
 import { useRevoke } from "./useRevoke";
@@ -45,6 +47,21 @@ export function AppPage({ initialAddress }: { initialAddress?: string }) {
     } finally {
       setBulk(false);
     }
+  }
+
+  /** After a sandbox grant, refresh only what changed (seconds) instead of re-scanning the history (~20 s). */
+  async function applySandbox(u: SandboxUpdate) {
+    if (!result) return;
+    if (u.lane === "native") {
+      const native = await readNativePermissions(REST, result.account.qor);
+      setResult((r) => (r ? { ...r, native } : r));
+      return;
+    }
+    if (!client) return;
+    const [live] = await readLiveApprovals(client as unknown as EvmClient, [u.event]);
+    if (!live) return;
+    const same = (a: LiveApproval) => a.token.toLowerCase() === live.token.toLowerCase() && a.spender.toLowerCase() === live.spender.toLowerCase();
+    setResult((r) => (r ? { ...r, evm: [...r.evm.filter((a) => !same(a)), live] } : r));
   }
 
   async function run(target: string) {
@@ -181,7 +198,7 @@ export function AppPage({ initialAddress }: { initialAddress?: string }) {
           <Results r={result} actions={{ status, evmBlocker, onRevokeEvm: revokeEvm, onRevokeNative: revokeNative }} />
           <Receipt account={result.account.evm} entries={receipt} />
           <History r={result} />
-          <TestSandbox qor={result.account.qor} evm={result.account.evm} onDone={() => run(result.account.qor)} />
+          <TestSandbox qor={result.account.qor} evm={result.account.evm} onDone={applySandbox} />
         </section>
       ) : (
         !scanning && (
