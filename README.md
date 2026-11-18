@@ -12,6 +12,8 @@ Unyoke reads both lanes for any address, tells you in plain words what each perm
 - **Proven on testnet:** every kind of revoke below has a real transaction in [Proven on testnet](#proven-on-testnet)
 - **No keys, no server, no database.** Unyoke is a static site. Your wallet signs; Unyoke only reads.
 
+![Unyoke: take back every permission you've handed out](docs/cover.png)
+
 ---
 
 ## Contents
