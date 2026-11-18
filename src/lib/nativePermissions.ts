@@ -69,8 +69,9 @@ const STAKE_MSG: Record<string, string> = {
 
 type Json = Record<string, unknown>;
 const str = (v: unknown): string | undefined => (typeof v === "string" ? v : undefined);
+/** A coin list, or undefined when there is none. The chain returns `spend_limit: []` for "no limit". */
 const coins = (v: unknown) =>
-  Array.isArray(v) ? v.map((c) => ({ denom: String((c as Json).denom), amount: String((c as Json).amount) })) : undefined;
+  Array.isArray(v) && v.length > 0 ? v.map((c) => ({ denom: String((c as Json).denom), amount: String((c as Json).amount) })) : undefined;
 
 /** Which message type an authz grant covers (needed to revoke it). */
 export function authzMsgTypeUrl(authorization: Json): string | undefined {

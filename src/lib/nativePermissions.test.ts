@@ -8,6 +8,7 @@ import {
   revokeMessageFor,
 } from "./nativePermissions";
 import { toQorexMessage } from "./qorexMessage";
+import { nativePermissionRisk } from "./risk";
 
 const ME = "qor1qef7x5ac8zwq82ckeyg80j9g3ekdpgwczw8lwh";
 const THEM = "qor1ju2rkacaxnwmjyctspa3xkhxwkj6jc72k63kvn";
@@ -118,3 +119,20 @@ describe("revokeMessageFor", () => {
     expect(() => revokeMessageFor(g!)).toThrow(/can't tell/);
   });
 });
+
+describe("unlimited grants", () => {
+  it("treats an empty spend_limit as no limit (what the chain returns for an unlimited fee grant)", () => {
+    const [g] = parseFeeGrants({
+      allowances: [
+        {
+          granter: "qor1a",
+          grantee: "qor1b",
+          allowance: { "@type": "/cosmos.feegrant.v1beta1.BasicAllowance", spend_limit: [], expiration: null },
+        },
+      ],
+    });
+    expect(g.spendLimit).toBeUndefined();
+    expect(nativePermissionRisk(g).level).toBe("medium");
+  });
+});
+
