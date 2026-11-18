@@ -11,7 +11,8 @@ import { ArrowRight, ArrowUpRight, BookIcon, CodeIcon, FuelIcon, KeyIcon, NftIco
 import { SAMPLE_SCAN } from "./sampleScan";
 import { useReveal } from "./useReveal";
 
-export const DEMO_ADDRESS = import.meta.env.VITE_DEMO_ADDRESS || "0x76dac5461ff361f911e5f39810c9455a6180c180";
+/** The demo account: open permissions on both lanes (all to 0x…dEaD) plus a revoke history made through Unyoke. */
+export const DEMO_ADDRESS = import.meta.env.VITE_DEMO_ADDRESS || "qor178yefzlrjy9hqgjt63tc5920wnp2hqyzlfcmzu";
 
 type Check = { id: string; lane: "EVM" | "Native"; icon: ReactNode; title: string; body: string; doc: string; docLabel: string };
 
