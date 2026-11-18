@@ -79,11 +79,13 @@ export function PhoneHandoff({ address }: { address: string }) {
         <div className="handoff-qr" />
       )}
       <div className="handoff-text">
-        <span className="kicker mono">continue on your phone</span>
-        <h3>Revoke from the QoreX app</h3>
+        <span className="kicker mono">revoking from this computer</span>
+        <h3>Grants here, token approvals on your phone</h3>
         <p className="muted">
-          QoreChain only accepts EVM transactions inside a post-quantum window, and only QoreX mobile opens one for you. Desktop
-          wallets can scan but not revoke.
+          <b>Grants and fee grants:</b> revoke them here with the QoreX extension on testnet (in QoreX, tap the version number 7
+          times, then <i>Switch to testnet (diana)</i>). <b>Token approvals</b> are EVM transactions, which the extension can't sign
+          yet: scan the code to finish in the QoreX app, which opens a one-transaction window for each. (MetaMask or Rabby also work
+          inside an EVM access window you open in QoreX.)
         </p>
         <ol>
           <li>Scan the code with your phone's camera.</li>

@@ -8,8 +8,9 @@ export function isQorexMobile(): boolean {
 }
 
 export const NO_WINDOW_HELP =
-  "QoreChain only accepts an EVM transaction inside a post-quantum window, and this wallet can't open one. " +
-  "Open this page in the QoreX app's browser on your phone: it opens a one-transaction window for you. " +
+  "QoreChain only accepts an EVM transaction inside a post-quantum window, and no window is open for this account. " +
+  "Scan the QR code above to finish in the QoreX app, which opens a one-transaction window for you, " +
+  "or open an EVM access window in the QoreX extension and try again. " +
   "(Keplr and other desktop wallets show this as \"An unknown RPC error occurred\".)";
 
 /**
