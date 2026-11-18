@@ -156,7 +156,7 @@ export function useRevoke(result: ScanResult | undefined, rest: string) {
           error: /cannot show|will not sign/i.test(m)
             ? `QoreX can't display this message type yet, so it won't sign it: ${m}`
             : /network|chain id|chainid/i.test(m)
-              ? `QoreX is on another network. Switch it to testnet. (${m})`
+              ? `QoreX is on another network. Switch it to testnet: in the app, Settings → Use testnet (developers); in the extension, tap the version number 7 times, then Switch to testnet (diana). (${m})`
               : m,
         });
       }

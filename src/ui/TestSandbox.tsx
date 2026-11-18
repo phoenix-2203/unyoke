@@ -30,7 +30,7 @@ export function TestSandbox({ qor, evm, onDone }: { qor: string; evm: string; on
 
   async function native(job: Job, msg: { typeUrl: string; value: unknown }) {
     const q = getQorexNative();
-    if (!q || !hasCapability(q, "signAndBroadcast")) throw new Error("Open this page in the QoreX app's browser to sign native messages.");
+    if (!q || !hasCapability(q, "signAndBroadcast")) throw new Error("Connect QoreX first: the browser extension (on testnet) or the QoreX app's browser.");
     await q.enable(QORECHAIN_TESTNET_CHAIN_ID);
     const key = await q.getKey(QORECHAIN_TESTNET_CHAIN_ID);
     if (key.bech32Address !== qor) throw new Error("QoreX is on a different account than the one you scanned.");
