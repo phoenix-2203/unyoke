@@ -27,7 +27,7 @@ No AI service is called at runtime. Unyoke itself has no model, no API key and n
 
 ## How the AI's work was checked
 
-- **Tests and types on every change.** `pnpm typecheck`, `pnpm test` (80 tests) and `pnpm build` before each commit, plus CI on GitHub.
+- **Tests and types on every change.** `pnpm typecheck`, `pnpm test` (84 tests) and `pnpm build` before each commit, plus CI on GitHub.
 - **Real transactions, not mocks.** Every kind of revoke was done on testnet from the QoreX app. The hashes are in the [README](README.md#proven-on-testnet), and the AI read them back from the chain to confirm what each one did (for example, that each EVM window allowed only fUSD and one transaction).
 - **No claim without a source.** Figures in the README link to their source (Scam Sniffer's 2025 report). Where something wasn't tested, such as clearing 7702 consent through QoreX, the README says so.
 - **Small, reviewable commits**, pushed one by one, at the human's request.

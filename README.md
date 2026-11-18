@@ -128,18 +128,18 @@ sequenceDiagram
 
 ## Proven on testnet
 
-All from the QoreX iOS app on `qorechain-diana`, account `qor178yef…mzu` (`0xF1C9…8082`), through Unyoke's own interface on 17 November 2026. Transactions are Cosmos hashes; on the [explorer](https://explore.qore.network), choose **Testnet** at the top first.
+All from the QoreX iOS app on `qorechain-diana`, account `qor178yef…mzu` (`0xF1C9…8082`), through Unyoke's own interface on 17 November 2026. Each hash opens Unyoke's own transaction page, which reads testnet directly and shows what the transaction did and its post-quantum check (the hybrid signature, or the EVM window that admitted it). On the [public explorer](https://explore.qore.network), choose **Testnet** at the top first.
 
 | What | Transaction |
 |---|---|
-| Sandbox: `authz` grant (vote, no expiry) | `F36A89B960E8A6FDD8477039AA0CC9F6F8709450461FAA39D6AC31B74175F93D` |
-| **Unyoke revokes it** (`MsgRevoke`, hybrid-signed) | `7D4F9DEF11A7567297E38E13202F4A56C6C885F110816A149EE114CE3A6633B2` |
-| QoreX opens a window: fUSD only, 1 tx | `B91C990FF7B5C29727B1567136B57F4F2459B1530B01060666398873C51AD0D9` |
-| Sandbox: unlimited fUSD approval to `0x…dEaD` (uses up that window) | `3E3542495D6ED73E5FE9A4B0D144C41018BC2DC9070389A5FE59548A6E65135B` |
-| Sandbox: fee grant, no limit | `A1E3282FDEBD97F177A86E422D34C7D4B258BADB6DB41B9CB585E24B27F7D13F` |
-| QoreX opens a window for the revoke: fUSD only, 1 tx, 100 blocks | `77C275A27268EB38653CA3B4DAB1A05D967D0506C944B7FC4610212301149077` |
-| **Unyoke revokes the approval** (`approve(0x…dEaD, 0)`) | `250959F74706CF4A2D705F5F0B826DA510E2BAADC1EA3E1ECDAD379AFADA6CDF` |
-| **Unyoke revokes the fee grant** (`MsgRevokeAllowance`) | `6A2316E94530B1CA9F435C32D8D57566C6726510862DB2D89DC5F67367E15B00` |
+| Sandbox: `authz` grant (vote, no expiry) | [`F36A89B960…75F93D`](https://unyoke.duckdns.org/tx/F36A89B960E8A6FDD8477039AA0CC9F6F8709450461FAA39D6AC31B74175F93D) |
+| **Unyoke revokes it** (`MsgRevoke`, hybrid-signed) | [`7D4F9DEF11…6633B2`](https://unyoke.duckdns.org/tx/7D4F9DEF11A7567297E38E13202F4A56C6C885F110816A149EE114CE3A6633B2) |
+| QoreX opens a window: fUSD only, 1 tx | [`B91C990FF7…1AD0D9`](https://unyoke.duckdns.org/tx/B91C990FF7B5C29727B1567136B57F4F2459B1530B01060666398873C51AD0D9) |
+| Sandbox: unlimited fUSD approval to `0x…dEaD` (uses up that window) | [`3E3542495D…65135B`](https://unyoke.duckdns.org/tx/3E3542495D6ED73E5FE9A4B0D144C41018BC2DC9070389A5FE59548A6E65135B) |
+| Sandbox: fee grant, no limit | [`A1E3282FDE…F7D13F`](https://unyoke.duckdns.org/tx/A1E3282FDEBD97F177A86E422D34C7D4B258BADB6DB41B9CB585E24B27F7D13F) |
+| QoreX opens a window for the revoke: fUSD only, 1 tx, 100 blocks | [`77C275A272…149077`](https://unyoke.duckdns.org/tx/77C275A27268EB38653CA3B4DAB1A05D967D0506C944B7FC4610212301149077) |
+| **Unyoke revokes the approval** (`approve(0x…dEaD, 0)`) | [`250959F747…DA6CDF`](https://unyoke.duckdns.org/tx/250959F74706CF4A2D705F5F0B826DA510E2BAADC1EA3E1ECDAD379AFADA6CDF) |
+| **Unyoke revokes the fee grant** (`MsgRevokeAllowance`) | [`6A2316E945…E15B00`](https://unyoke.duckdns.org/tx/6A2316E94530B1CA9F435C32D8D57566C6726510862DB2D89DC5F67367E15B00) |
 
 The approval and its revoke went through **different** windows, each used up by its single transaction. The allowance stayed open between them: a window protects the moment of sending, not what an approval leaves behind. The first experiments (window refusals, the first approve/revoke, `authz` and fee grant round trips) are in [docs/SPIKE_RESULTS.md](docs/SPIKE_RESULTS.md).
 
@@ -179,7 +179,7 @@ Build Before Q-Day asks what breaks when quantum computers can recover private k
 - **History is pruned.** Approvals set before block 8,790,799 can't be found through the public node. Unyoke shows this on every scan. An indexer is on the roadmap.
 - **Token revokes on desktop need an extra step.** The QoreX extension revokes grants and fee grants on testnet (its testnet switch is hidden: tap the version number 7 times, then *Switch to testnet (diana)*), but it can't sign EVM transactions yet. For token approvals, Unyoke shows a QR code that opens the same scan straight in the QoreX app (through QoreX's `link.qore.network/browse` link); MetaMask or Rabby also work inside an EVM access window opened in QoreX.
 - **Clearing 7702 consent isn't tested yet.** Unyoke builds the `MsgClearEVMDelegation` message, but QoreX may refuse to display it, as it does `MsgCloseEVMWindow`. If it does, Unyoke shows that message instead of failing silently.
-- **Not audited.** It's a client-side tool with 80 unit tests, and it only ever sends revocations: setting things to zero or removing them.
+- **Not audited.** It's a client-side tool with 84 unit tests, and it only ever sends revocations: setting things to zero or removing them.
 
 ## Architecture
 
@@ -210,9 +210,10 @@ flowchart TB
 | `src/lib/risk.ts` | The risk rules |
 | `src/lib/revoke.ts` | Revoke calls, permission keys, and reading the window back as evidence |
 | `src/lib/history.ts` | Revoke history: zeroed approvals from the log scan, native revokes from the tx search |
-| `src/lib/explorer.ts` | Explorer links, including EVM hash → Cosmos tx lookup |
+| `src/lib/txDetails.ts` | Explains a transaction: messages, decoded EVM calls, hybrid-signature verdict, window used |
+| `src/lib/explorer.ts` | EVM hash → Cosmos tx lookup, explorer link |
 | `src/ui/useRevoke.ts` | Sign → confirm → verify → receipt, with clear errors for window refusals |
-| `src/ui/` | Landing page, scanner, results, receipt, revoke history, testnet sandbox, desktop-to-phone QR hand-off |
+| `src/ui/` | Landing page, scanner, results, receipt, revoke history, transaction page, testnet sandbox, desktop-to-phone QR hand-off |
 | `scripts/seed-demo.ts` | Gives a throwaway testnet account a set of permissions for demos |
 | `deploy/` | Caddy site and a one-command VPS setup |
 | `docs/SPIKE_RESULTS.md` | What QoreX will and won't sign for a website, with transactions |
@@ -222,7 +223,7 @@ flowchart TB
 ```bash
 pnpm install
 pnpm dev            # http://localhost:5173 (proxies /lcd-testnet to the REST API)
-pnpm test           # 80 unit tests
+pnpm test           # 84 unit tests
 pnpm typecheck
 pnpm build
 ```
