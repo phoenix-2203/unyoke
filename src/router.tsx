@@ -1,16 +1,26 @@
 /**
- * A tiny client-side router: "/" is the landing page, "/app" the scanner.
+ * A tiny client-side router: "/" is the landing page, "/app" the scanner,
+ * "/tx/<hash>" a transaction.
  * No dependency; uses the History API. Hosting must serve index.html for
  * every path (see vercel.json).
  */
 import { type AnchorHTMLAttributes, type MouseEvent, useEffect, useState } from "react";
 
-export type Route = "landing" | "app";
+export type Route = "landing" | "app" | "tx";
 
 const listeners = new Set<() => void>();
 
 function routeOf(pathname: string): Route {
-  return pathname.replace(/\/+$/, "") === "/app" ? "app" : "landing";
+  const p = pathname.replace(/\/+$/, "");
+  if (p === "/app") return "app";
+  if (p.startsWith("/tx/")) return "tx";
+  return "landing";
+}
+
+/** The hash in /tx/<hash>, if any. */
+export function txHashFromPath(pathname: string): string | undefined {
+  const m = pathname.match(/^\/tx\/((?:0x)?[0-9A-Fa-f]{64})\/?$/);
+  return m?.[1];
 }
 
 export function navigate(to: string) {
@@ -51,7 +61,7 @@ export function Link({ href, onClick, ...rest }: AnchorHTMLAttributes<HTMLAnchor
       {...rest}
       onClick={(e: MouseEvent<HTMLAnchorElement>) => {
         onClick?.(e);
-        if (!internal || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+        if (!internal || rest.target === "_blank" || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
         e.preventDefault();
         navigate(href.startsWith("#") ? window.location.pathname + href : href);
       }}
