@@ -82,6 +82,7 @@ async function main() {
   check("…and rates it high (unlimited)", !!ap && evmApprovalRisk(ap, before.scannedTo).level === "high");
   check("scanner finds the vote grant", !!vote, vote ? `risk ${nativePermissionRisk(vote).level}` : "missing");
   check("scanner finds the fee grant", !!fee, fee ? `risk ${nativePermissionRisk(fee).level}` : "missing");
+  check("…and rates it medium (no spend limit)", !!fee && nativePermissionRisk(fee).level === "medium");
   check("account read as Ethereum-style", before.accountKind === "ethereum", before.accountKind);
   if (!ap || !vote || !fee) throw new Error("Scan missed a permission; not revoking.");
 
