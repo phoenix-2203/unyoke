@@ -245,4 +245,4 @@ Demo data on a **throwaway** testnet account (never a real one; the script refus
 
 ---
 
-MIT licensed. Built by [phoenix-2203](https://github.com/phoenix-2203) in Ibadan, with Claude.
+MIT licensed. Built by [phoenix-2203](https://github.com/phoenix-2203) in Ibadan, with Claude: how AI was used is in [AI_USAGE.md](AI_USAGE.md).
