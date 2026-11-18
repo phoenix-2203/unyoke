@@ -7,10 +7,12 @@ import { QORECHAIN_TESTNET_CHAIN_ID, getQorexNative, hasCapability } from "@qore
 import { qorechainTestnet, toQorAddress } from "@qorechain/evm";
 import { authz, feegrant } from "@qorechain/sdk";
 import { useState } from "react";
-import { erc20Abi, maxUint256 } from "viem";
+import { type Hex, erc20Abi, maxUint256 } from "viem";
 import { useAccount, usePublicClient, useSwitchChain, useWriteContract } from "wagmi";
 import { basicAllowance, genericAuthorization, sendAuthorization } from "../lib/grantEncoding";
+import type { ApprovalEvent } from "../lib/evmApprovalLogs";
 import { toQorexMessage } from "../lib/qorexMessage";
+import { useEnsureEvmAccount } from "./useEvmAccount";
 import { evmWindowBlocker, explainEvmError } from "./qorexEnv";
 
 const FUSD = "0x97143B771D34ddb9130b807b135Ae675A5a963CA" as const;
@@ -20,8 +22,12 @@ const DEAD_QOR = toQorAddress(DEAD);
 type Job = "approval" | "authz" | "send" | "feegrant";
 const message = (e: unknown) => (e instanceof Error ? (e as { shortMessage?: string }).shortMessage ?? e.message : String(e));
 
-export function TestSandbox({ qor, evm, onDone }: { qor: string; evm: string; onDone: () => void }) {
-  const { address, chainId } = useAccount();
+/** What changed, so the page can refresh just that part instead of re-scanning everything. */
+export type SandboxUpdate = { lane: "native" } | { lane: "evm"; event: ApprovalEvent };
+
+export function TestSandbox({ qor, evm, onDone }: { qor: string; evm: string; onDone: (u: SandboxUpdate) => Promise<void> | void }) {
+  const { chainId } = useAccount();
+  const ensureAccount = useEnsureEvmAccount();
   const client = usePublicClient({ chainId: qorechainTestnet.id });
   const { writeContractAsync } = useWriteContract();
   const { switchChainAsync } = useSwitchChain();
@@ -41,14 +47,19 @@ export function TestSandbox({ qor, evm, onDone }: { qor: string; evm: string; on
   async function make(job: Job) {
     setBusy(job);
     setNote(undefined);
+    let update: SandboxUpdate = { lane: "native" };
     try {
       if (job === "approval") {
-        if (!address || address.toLowerCase() !== evm.toLowerCase()) throw new Error("Connect the wallet you scanned first.");
+        await ensureAccount(evm);
         const blocked = await evmWindowBlocker("/lcd-testnet", qor, FUSD);
         if (blocked) throw new Error(blocked);
         if (chainId !== qorechainTestnet.id) await switchChainAsync({ chainId: qorechainTestnet.id });
         const hash = await writeContractAsync({ address: FUSD, abi: erc20Abi, functionName: "approve", args: [DEAD, maxUint256], chainId: qorechainTestnet.id });
-        await client?.waitForTransactionReceipt({ hash });
+        const rcpt = await client?.waitForTransactionReceipt({ hash });
+        update = {
+          lane: "evm",
+          event: { kind: "erc20", token: FUSD, owner: evm as Hex, spender: DEAD, value: maxUint256, blockNumber: rcpt?.blockNumber ?? 0n, txHash: hash, logIndex: 0 },
+        };
       } else if (job === "send") {
         await native(job, authz.grant({ granter: qor, grantee: DEAD_QOR, grant: { authorization: sendAuthorization("uqor", "5000000") } }));
       } else if (job === "authz") {
@@ -56,8 +67,9 @@ export function TestSandbox({ qor, evm, onDone }: { qor: string; evm: string; on
       } else {
         await native(job, feegrant.grant({ granter: qor, grantee: DEAD_QOR, allowance: basicAllowance() }));
       }
-      setNote({ ok: true, text: "Created. Scanning again…" });
-      onDone();
+      setNote({ ok: true, text: "Created. Updating the list…" });
+      await onDone(update);
+      setNote({ ok: true, text: "Created ✓ It's in the list above." });
     } catch (e) {
       setNote({ ok: false, text: job === "approval" ? explainEvmError(message(e)) : message(e) });
     } finally {

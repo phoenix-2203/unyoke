@@ -17,6 +17,7 @@ import { toQorexMessage } from "../lib/qorexMessage";
 import { type WindowEvidence, evmRevokeCall, parseWindowEvidence, permissionKey } from "../lib/revoke";
 import type { ScanResult } from "../lib/scanAccount";
 import { evmWindowBlocker, explainEvmError } from "./qorexEnv";
+import { useEnsureEvmAccount } from "./useEvmAccount";
 
 export type RevokeState = "idle" | "signing" | "confirming" | "verifying" | "done" | "failed";
 
@@ -51,27 +52,23 @@ export function useRevoke(result: ScanResult | undefined, rest: string) {
   const client = usePublicClient({ chainId: qorechainTestnet.id });
   const { writeContractAsync } = useWriteContract();
   const { switchChainAsync } = useSwitchChain();
+  const ensureAccount = useEnsureEvmAccount();
   const [status, setStatus] = useState<Record<string, RevokeStatus>>({});
   const [receipt, setReceipt] = useState<ReceiptEntry[]>([]);
 
   const set = (key: string, s: RevokeStatus) => setStatus((m) => ({ ...m, [key]: s }));
 
-  /** Why EVM revokes are not possible right now, if they are not. */
-  const evmBlocker = !result
-    ? "Scan an account first."
-    : !address
-      ? "Connect the wallet that owns this account to revoke."
-      : address.toLowerCase() !== result.account.evm.toLowerCase()
-        ? "The connected wallet is a different account. Connect the one you scanned."
-        : undefined;
+  /** Why EVM revokes are not possible right now, if they are not. The wallet is connected on click. */
+  const evmBlocker = !result ? "Scan an account first." : undefined;
 
   const revokeEvm = useCallback(
     async (a: LiveApproval) => {
       const key = permissionKey(a);
       if (!client || !result) return;
       try {
-        if (chainId !== qorechainTestnet.id) await switchChainAsync({ chainId: qorechainTestnet.id });
         set(key, { state: "signing" });
+        await ensureAccount(result.account.evm);
+        if (chainId !== qorechainTestnet.id) await switchChainAsync({ chainId: qorechainTestnet.id });
         const blocked = await evmWindowBlocker(rest, result.account.qor, a.token);
         if (blocked) throw new Error(blocked);
         const call = evmRevokeCall(a);
@@ -109,7 +106,7 @@ export function useRevoke(result: ScanResult | undefined, rest: string) {
         set(key, { state: "failed", error: kind ? WINDOW_HELP[kind] : explainEvmError(message(e)) });
       }
     },
-    [client, result, chainId, switchChainAsync, writeContractAsync, rest],
+    [client, result, chainId, switchChainAsync, writeContractAsync, rest, ensureAccount],
   );
 
   const revokeNative = useCallback(
