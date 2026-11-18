@@ -54,7 +54,10 @@ export function PhoneHandoff({ address }: { address: string }) {
         <div className="handoff-text">
           <span className="kicker mono">revoke from QoreX</span>
           <h3>Open this scan in the QoreX app</h3>
-          <p className="muted">QoreX signs revokes with your post-quantum key and opens a one-transaction window for each token.</p>
+          <p className="muted">
+            QoreX signs revokes with your post-quantum key and opens a one-transaction window for each token. If the button doesn't
+            switch to QoreX, copy the link and paste it into QoreX's browser.
+          </p>
           <div className="handoff-actions">
             <a className="button" href={open}>
               Open in QoreX
@@ -85,6 +88,7 @@ export function PhoneHandoff({ address }: { address: string }) {
         <ol>
           <li>Scan the code with your phone's camera.</li>
           <li>It opens this same scan in the QoreX app, ready to revoke.</li>
+          <li>Opened in your phone's browser instead? Tap <b>Copy link</b> there and paste it into QoreX's browser.</li>
         </ol>
         <button type="button" className="ghost" onClick={copy}>
           {copied ? "Copied ✓" : "Copy link instead"}
