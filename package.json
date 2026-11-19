@@ -13,7 +13,10 @@
     "test:watch": "vitest",
     "seed:demo": "node --env-file-if-exists=.env.seed --import tsx scripts/seed-demo.ts",
     "e2e:testnet": "node --env-file-if-exists=.env.seed --import tsx scripts/e2e-testnet.ts",
-    "build:contract": "tsx scripts/build-contract.ts"
+    "build:contract": "tsx scripts/build-contract.ts",
+    "deploy:pqc-check": "node --env-file-if-exists=.env.seed --import tsx scripts/deploy-pqc-check.ts",
+    "amm:swap": "node --env-file-if-exists=.env.seed --import tsx scripts/amm-swap.ts",
+    "qoreseal:register": "node --env-file-if-exists=.env.seed --import tsx scripts/register-qoreseal-key.ts"
   },
   "dependencies": {
     "@qorechain/evm": "^0.14.0",
@@ -29,6 +32,7 @@
     "wagmi": "^2.19.5"
   },
   "devDependencies": {
+    "@qorechain/qoreseal": "0.1.0",
     "@qorechain/qorex-wallet-mock": "^0.1.0",
     "@types/node": "^22.20.5",
     "@types/qrcode": "^1.5.6",

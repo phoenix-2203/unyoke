@@ -42,6 +42,9 @@ importers:
         specifier: ^2.19.5
         version: 2.19.5(@tanstack/query-core@5.107.1)(@tanstack/react-query@5.107.1(@types/react@18.3.31)(react@18.3.1))(@types/react@18.3.31)(bufferutil@4.2.0)(react@18.3.1)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.53.1(bufferutil@4.2.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.7))(zod@4.6.7)
     devDependencies:
+      '@qorechain/qoreseal':
+        specifier: 0.1.0
+        version: 0.1.0
       '@qorechain/qorex-wallet-mock':
         specifier: ^0.1.0
         version: 0.1.0(bufferutil@4.2.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.6.7)
@@ -778,6 +781,10 @@ packages:
   '@qorechain/pqc@0.2.3':
     resolution: {integrity: sha512-YLzcfwkeq9mCyTcFf/BQFB7dsNIkyFcUluByp1zrJ7SRAkPj8cwPmv7jtw5Xeh7K80FgwzlvtBeZb/dzzknWZA==}
     engines: {node: '>=18'}
+
+  '@qorechain/qoreseal@0.1.0':
+    resolution: {integrity: sha512-OBUwTVsibzTH/zOpqT6lkq7mH/dCg9zV4hSw3tEMUttt3Jb4BqF4BF6/DsZqzSY1+joPusm3gRutx17kV+Hb5w==}
+    engines: {node: '>=20'}
 
   '@qorechain/qoresign@0.1.0':
     resolution: {integrity: sha512-PF4x20G3l1+Qym762WOuoGv/0jN+BMeqIPWwZIGlxF0OMulOIVX2s7yzBaTjrAJUilqUwJKUNtDvLnPEPJFD8g==}
@@ -4164,6 +4171,17 @@ snapshots:
     dependencies:
       '@noble/hashes': 2.4.0
       '@noble/post-quantum': 0.7.1
+
+  '@qorechain/qoreseal@0.1.0':
+    dependencies:
+      '@noble/ciphers': 2.4.0
+      '@noble/curves': 2.4.0
+      '@noble/hashes': 2.4.0
+      '@noble/post-quantum': 0.7.1
+      '@qorechain/pqc': 0.2.3
+      '@qorechain/qoresign': 0.1.0
+      '@scure/base': 2.4.0
+      '@scure/bip39': 2.4.0
 
   '@qorechain/qoresign@0.1.0':
     dependencies:
