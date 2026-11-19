@@ -80,7 +80,7 @@ Each approval also shows the token's name and decimals, your current balance, wh
 
 **Account kinds.** QoreX's default account is Cosmos-style (coin 118): its 0x form is only a re-encoding, it can't sign EVM transactions, so it can't give token approvals. Unyoke reads the account's key type from the chain and says so instead of offering token actions that would fail. Ethereum-style accounts (coin 60, *Add an Ethereum account* in QoreX) have both lanes.
 
-**Not included on purpose:** linked keys. Another Build Before Q-Day project already handles revoking those, and Unyoke shouldn't duplicate it.
+**Not included on purpose:** linked keys (authenticators). Those are keys an account links to act for it, managed by the wallet, not permissions handed to an app; another Build Before Q-Day project manages them, and Unyoke doesn't duplicate it.
 
 ## How risk is rated
 
@@ -151,6 +151,8 @@ All from the QoreX iOS app on `qorechain-diana`, account `qor178yef…mzu` (`0xF
 | **Unyoke revokes the fee grant** (`MsgRevokeAllowance`) | [`6A2316E945…E15B00`](https://unyoke.duckdns.org/tx/6A2316E94530B1CA9F435C32D8D57566C6726510862DB2D89DC5F67367E15B00) |
 
 The approval and its revoke went through **different** windows, each used up by its single transaction. The allowance stayed open between them: a window protects the moment of sending, not what an approval leaves behind. The first experiments (window refusals, the first approve/revoke, `authz` and fee grant round trips) are in [docs/SPIKE_RESULTS.md](docs/SPIKE_RESULTS.md).
+
+**PqcKeyCheck** was deployed on 19 November 2026 from the throwaway project account, through a window that allowed one transaction ([`0x897b95ce…a4dab406`](https://unyoke.duckdns.org/tx/0x897b95cefe4cd9b7a3c5e8fc1df9dc6767fb1e4f9f4a21b06ea3b50ba4dab406), block 10,363,722). Its first read, of the sample account, returned registered, ML-DSA-87, proof of possession ✓.
 
 ### End-to-end check, run on testnet
 
