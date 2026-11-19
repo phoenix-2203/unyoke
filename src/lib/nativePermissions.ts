@@ -138,12 +138,28 @@ async function getJson(fetchFn: FetchLike, url: string): Promise<unknown> {
   return res.json();
 }
 
+/**
+ * Follow `pagination.next_key` so an account with many grants is read in full
+ * (a first page alone would make the rest look absent). Capped as a safety net.
+ */
+async function getAllPages(fetchFn: FetchLike, url: string, listKey: string, maxPages = 50): Promise<unknown> {
+  const all: unknown[] = [];
+  let key: string | undefined;
+  for (let i = 0; i < maxPages; i++) {
+    const body = (await getJson(fetchFn, key ? `${url}&pagination.key=${encodeURIComponent(key)}` : url)) as Json;
+    all.push(...(((body?.[listKey] as unknown[]) ?? [])));
+    key = str((body?.pagination as Json | undefined)?.next_key) || undefined;
+    if (!key) return { [listKey]: all };
+  }
+  throw new Error(`This account has more than ${maxPages} pages of ${listKey}; Unyoke stopped rather than show a partial list.`);
+}
+
 /** Read every native-lane permission `qorAddress` has granted. */
 export async function readNativePermissions(rest: string, qorAddress: string, fetchFn: FetchLike = fetch): Promise<NativePermission[]> {
   const base = rest.replace(/\/$/, "");
   const [authzBody, feeBody, consentBody] = await Promise.all([
-    getJson(fetchFn, `${base}/cosmos/authz/v1beta1/grants/granter/${qorAddress}?pagination.limit=200`),
-    getJson(fetchFn, `${base}/cosmos/feegrant/v1beta1/issued/${qorAddress}?pagination.limit=200`),
+    getAllPages(fetchFn, `${base}/cosmos/authz/v1beta1/grants/granter/${qorAddress}?pagination.limit=200`, "grants"),
+    getAllPages(fetchFn, `${base}/cosmos/feegrant/v1beta1/issued/${qorAddress}?pagination.limit=200`, "allowances"),
     getJson(fetchFn, `${base}/qorechain/pqc/v1/evm_delegation_consent/${qorAddress}`),
   ]);
   const consent = parseDelegationConsent(qorAddress, consentBody);

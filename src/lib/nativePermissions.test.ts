@@ -95,6 +95,20 @@ describe("readNativePermissions", () => {
     expect(urls[0]).toBe(`https://rest.example/cosmos/authz/v1beta1/grants/granter/${ME}?pagination.limit=200`);
   });
 
+  it("follows next_key so a long list of grants is read in full", async () => {
+    const page1 = { grants: (authzBody as { grants: unknown[] }).grants.slice(0, 2), pagination: { next_key: "a/b+c=" } };
+    const page2 = { grants: (authzBody as { grants: unknown[] }).grants.slice(2), pagination: { next_key: null } };
+    const urls: string[] = [];
+    const fake: FetchLike = async (url) => {
+      urls.push(url);
+      const body = url.includes("/authz/") ? (url.includes("pagination.key=") ? page2 : page1) : url.includes("/feegrant/") ? feeBody : consentBody;
+      return { ok: true, status: 200, json: async () => body };
+    };
+    const all = await readNativePermissions("https://rest.example", ME, fake);
+    expect(all.filter((p) => p.kind === "authz")).toHaveLength(3);
+    expect(urls).toContain(`https://rest.example/cosmos/authz/v1beta1/grants/granter/${ME}?pagination.limit=200&pagination.key=a%2Fb%2Bc%3D`);
+  });
+
   it("fails loudly when the API errors", async () => {
     const fake: FetchLike = async () => ({ ok: false, status: 501, json: async () => ({}) });
     await expect(readNativePermissions("https://rest.example", ME, fake)).rejects.toThrow(/501/);
