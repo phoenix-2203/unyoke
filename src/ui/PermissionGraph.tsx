@@ -44,8 +44,8 @@ export function PermissionGraph() {
       <svg viewBox="0 0 900 440" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Your account and the permissions it has handed out">
         <defs>
           <radialGradient id="core" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="var(--accent-text)" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="var(--accent-text)" stopOpacity="0" />
+            <stop offset="0%" stopColor="var(--accent)" stopOpacity="var(--core-glow)" />
+            <stop offset="100%" stopColor="var(--accent)" stopOpacity="0" />
           </radialGradient>
           <filter id="soft" x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="4" />

@@ -30,6 +30,10 @@
   --node-fill-accent: #171b14;
   --on-high: #1a0505;
   --grain: 0.06;
+  --me-fill: #d8ff5c;
+  --me-ink: #0b0d02;
+  --me-ring: transparent;
+  --core-glow: 0.35;
   --radius: 16px;
   --sans: "Inter Tight", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --serif: "Instrument Serif", ui-serif, Georgia, serif;
@@ -71,6 +75,10 @@
   --node-fill-accent: #f1f8d8;
   --on-high: #ffffff;
   --grain: 0.035;
+  --me-fill: #121418;
+  --me-ink: #d8ff5c;
+  --me-ring: #d8ff5c;
+  --core-glow: 0.5;
   color-scheme: light;
 }
 
@@ -456,6 +464,25 @@ button.revoke {
 }
 
 /* ---------- hero stage + permission graph ---------- */
+/* Light: no fade-out at the bottom (it washed the lower nodes out on a pale page), stronger lines. */
+:root[data-theme="light"] .stage {
+  mask-image: none;
+  -webkit-mask-image: none;
+  box-shadow: 0 30px 60px -40px rgba(17, 19, 23, 0.25);
+}
+
+:root[data-theme="light"] .edge .line {
+  stroke-opacity: 0.8;
+}
+
+:root[data-theme="light"] .edge .glow {
+  stroke-opacity: 0.1;
+}
+
+:root[data-theme="light"] .node rect {
+  stroke: rgba(var(--ink-rgb), 0.16);
+}
+
 .stage {
   position: relative;
   margin-top: 3.5rem;
@@ -571,17 +598,24 @@ button.revoke {
 }
 
 .me circle {
-  fill: var(--accent-text);
+  fill: var(--me-fill);
+  stroke: var(--me-ring);
+  stroke-width: 3;
 }
 
 .me-u {
-  fill: var(--accent-ink);
+  fill: var(--me-ink);
 }
 
 
 .me-label {
   fill: var(--text);
   font: 500 12px var(--mono);
+  /* a halo in the card's color, so the lines never run through the words */
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 6px;
+  stroke-linejoin: round;
 }
 
 /* each risky edge gets cut in turn, then comes back */
