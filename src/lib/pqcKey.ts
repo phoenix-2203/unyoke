@@ -10,8 +10,8 @@ import type { Abi, Hex } from "viem";
 import type { ChainReader } from "./evmApprovalState";
 import { PQC_KEY_CHECK_ABI } from "./pqcKeyCheckArtifact";
 
-/** PqcKeyCheck on the QoreChain testnet (qorechain-diana). Unset until it is deployed. */
-export const PQC_KEY_CHECK_ADDRESS: Hex | undefined = undefined;
+/** PqcKeyCheck on the QoreChain testnet (qorechain-diana), deployed in tx 0x897b95ce…a4dab406 at block 10,363,722. */
+export const PQC_KEY_CHECK_ADDRESS: Hex | undefined = "0xC4d2b554BE4014656cf5938b5e2F0561011Cb5f9";
 
 export interface PqcKeyStatus {
   registered: boolean;
