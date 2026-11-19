@@ -63,6 +63,8 @@ flowchart LR
 5. **Keep a receipt.** Every removal is listed with its transaction and, for token revokes, the exact window QoreX opened ("this token only, 1 tx, used up"). **Copy receipt** gives you a markdown table.
 6. **See the history.** Each scan also lists the permissions this account has already removed, read from the chain: allowances set to 0, approve-all turned off, and `authz`, fee-grant and 7702 revokes. It includes revokes made with any tool, marks the ones sent through Unyoke, and looks the same to anyone who scans the address.
 
+Light and dark themes: Unyoke follows your system setting until you pick one with the sun/moon button, and remembers your choice.
+
 ## What it finds
 
 | Permission | How Unyoke finds it | How it's removed |
@@ -199,7 +201,7 @@ Build Before Q-Day asks what breaks when quantum computers can recover private k
 - **History is pruned.** Approvals set before block 8,790,799 can't be found through the public node. Unyoke shows this on every scan. An indexer is on the roadmap.
 - **Token revokes on desktop need an extra step.** The QoreX extension revokes grants and fee grants on testnet (its testnet switch is hidden: tap the version number 7 times, then *Switch to testnet (diana)*), but it can't sign EVM transactions yet. For token approvals, Unyoke shows a QR code that opens the same scan straight in the QoreX app (through QoreX's `link.qore.network/browse` link); MetaMask or Rabby also work inside an EVM access window opened in QoreX.
 - **Clearing 7702 consent isn't tested yet.** Unyoke builds the `MsgClearEVMDelegation` message, but QoreX may refuse to display it, as it does `MsgCloseEVMWindow`. If it does, Unyoke shows that message instead of failing silently.
-- **Not audited.** It's a client-side tool with 90 unit tests, and it only ever sends revocations: setting things to zero or removing them.
+- **Not audited.** It's a client-side tool with 93 unit tests, and it only ever sends revocations: setting things to zero or removing them.
 
 ## Architecture
 
@@ -232,6 +234,7 @@ flowchart TB
 | `src/lib/history.ts` | Revoke history: zeroed approvals from the log scan, native revokes from the tx search |
 | `src/lib/txDetails.ts` | Explains a transaction: messages, decoded EVM calls, hybrid-signature verdict, window used |
 | `src/lib/explorer.ts` | EVM hash → Cosmos tx lookup, explorer link |
+| `src/ui/theme.ts` | Light/dark theme: saved choice, else the system setting (also set before first paint in `index.html`) |
 | `src/ui/useRevoke.ts` | Sign → confirm → verify → receipt, with clear errors for window refusals |
 | `src/ui/` | Landing page, scanner, results, receipt, revoke history, transaction page, testnet sandbox, desktop-to-phone QR hand-off |
 | `scripts/e2e-testnet.ts` | `pnpm e2e:testnet`: create → scan → revoke → re-scan on testnet, with Unyoke's own code |
