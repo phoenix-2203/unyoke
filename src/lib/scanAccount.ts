@@ -16,6 +16,7 @@ import { type GetLogs, earliestLogBlock, latestPerPair, scanApprovalEvents } fro
 import { type ChainReader, type LiveApproval, readLiveApprovals, readTokenInfo } from "./evmApprovalState";
 import { type EvmRevocation, type NativeRevocation, evmRevocations, readNativeRevocations } from "./history";
 import { type FetchLike, type NativePermission, readNativePermissions } from "./nativePermissions";
+import { type PqcKeyStatus, readPqcKey } from "./pqcKey";
 
 /** What the scan needs from an EVM JSON-RPC client (a viem PublicClient fits). */
 export interface EvmClient extends ChainReader {
@@ -33,6 +34,8 @@ export interface ScanResult {
   account: AccountAddresses;
   /** Ethereum-style accounts can have token approvals; Cosmos-style ones can't sign EVM transactions. */
   accountKind: AccountKind;
+  /** The post-quantum signature key, read through PqcKeyCheck; absent when it couldn't be read. */
+  pqcKey?: PqcKeyStatus;
   evm: LiveApproval[];
   native: NativePermission[];
   /** First and last block whose EVM logs were read. */
@@ -81,6 +84,7 @@ export async function scanAccount(opts: ScanOptions): Promise<ScanResult> {
   );
 
   const kindPromise = readAccountKind(opts.rest, account.qor, opts.fetchFn);
+  const pqcKeyPromise = readPqcKey(opts.evm, account.evm as Hex);
   const nativeHistoryPromise = readNativeRevocations(opts.rest, account.qor, opts.fetchFn).then(
     (native) => ({ native }),
     (e) => ({ native: [] as NativeRevocation[], nativeError: message(e) }),
@@ -121,10 +125,12 @@ export async function scanAccount(opts: ScanOptions): Promise<ScanResult> {
   const nativeResult = await nativePromise;
   const nativeHistory = await nativeHistoryPromise;
   const accountKind = await kindPromise;
+  const pqcKey = await pqcKeyPromise;
   progress({ stage: "done" });
   return {
     account,
     accountKind,
+    pqcKey,
     evm,
     scannedFrom,
     scannedTo,
