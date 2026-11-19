@@ -11,8 +11,8 @@
  *
  * Each comes with the native message that removes it. Those are signed by
  * QoreX directly (hybrid signature); no EVM window is involved.
- * Linked keys (authenticators) are left out on purpose: Fenestella already
- * lists and revokes them.
+ * Linked keys (authenticators) are out of scope: they are keys linked to act
+ * for the account, managed by the wallet, not permissions handed to an app.
  */
 import { authz, clearEvmDelegationMsg, feegrant } from "@qorechain/sdk";
 import type { EncodeObjectLike } from "./qorexMessage";
