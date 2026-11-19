@@ -31,5 +31,6 @@ export async function evmWindowBlocker(rest: string, qor: string, target: string
 
 /** Wallets that hide the chain's reason behind a generic error. */
 export function explainEvmError(m: string): string {
+  if (m.includes(NO_WINDOW_HELP)) return NO_WINDOW_HELP; // already explained (and it quotes the generic error)
   return /unknown rpc error|internal json-rpc error/i.test(m) && !isQorexMobile() ? `${m} ${NO_WINDOW_HELP}` : m;
 }
