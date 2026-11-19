@@ -888,10 +888,6 @@ button.revoke {
   flex: none;
 }
 
-.pq-key-link {
-  color: var(--accent-text);
-}
-
 .pq-key-src {
   font-size: 0.72rem;
   color: var(--faint);

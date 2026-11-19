@@ -1,5 +1,4 @@
 import type { LiveApproval } from "../lib/evmApprovalState";
-import { type LinkedKeys, QOREX_LINKED_SIGNERS_URL, describeLinkedKeys } from "../lib/linkedKeys";
 import { type PqcKeyStatus, describePqcKey } from "../lib/pqcKey";
 import { formatQor, formatTokenAmount, shortAddress } from "../lib/format";
 import type { NativePermission } from "../lib/nativePermissions";
@@ -40,23 +39,6 @@ function PqcKeyNote({ k }: { k: PqcKeyStatus }) {
   );
 }
 
-function LinkedKeysNote({ k }: { k: LinkedKeys }) {
-  const line = describeLinkedKeys(k);
-  if (!line) return null;
-  return (
-    <div className={`pq-key ${line.tone}`}>
-      <span className={`dot ${line.tone === "high" ? "high" : "medium"}`} />
-      <span>
-        <b>{line.title}.</b> {line.detail}{" "}
-        <a href={QOREX_LINKED_SIGNERS_URL} target="_blank" rel="noreferrer" className="pq-key-link">
-          Linked signers in QoreX ↗
-        </a>{" "}
-        <span className="pq-key-src mono">removing them in QoreX is coming · read on chain</span>
-      </span>
-    </div>
-  );
-}
-
 /** The results view. `example` renders it as a static showcase (no links, no actions). */
 export function Results({ r, example = false, actions }: { r: ScanResult; example?: boolean; actions?: RevokeActions }) {
   const evm = sortByRisk(r.evm, (a) => evmApprovalRisk(a, r.scannedTo));
@@ -86,7 +68,6 @@ export function Results({ r, example = false, actions }: { r: ScanResult; exampl
       </div>
 
       {r.pqcKey && !example && <PqcKeyNote k={r.pqcKey} />}
-      {r.linkedKeys && !example && <LinkedKeysNote k={r.linkedKeys} />}
 
       {r.historyLimited && !example && (
         <div className="notice">
