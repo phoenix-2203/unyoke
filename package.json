@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "seed:demo": "node --env-file-if-exists=.env.seed --import tsx scripts/seed-demo.ts",
-    "e2e:testnet": "node --env-file-if-exists=.env.seed --import tsx scripts/e2e-testnet.ts"
+    "e2e:testnet": "node --env-file-if-exists=.env.seed --import tsx scripts/e2e-testnet.ts",
+    "build:contract": "tsx scripts/build-contract.ts"
   },
   "dependencies": {
     "@qorechain/evm": "^0.14.0",
@@ -34,6 +35,7 @@
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.0",
+    "solc": "0.8.28",
     "tsx": "^4.23.15",
     "typescript": "^5.6.3",
     "vite": "^5.4.0",
