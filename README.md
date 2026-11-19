@@ -201,7 +201,7 @@ Build Before Q-Day asks what breaks when quantum computers can recover private k
 - **History is pruned.** Approvals set before block 8,790,799 can't be found through the public node. Unyoke shows this on every scan. An indexer is on the roadmap.
 - **Token revokes on desktop need an extra step.** The QoreX extension revokes grants and fee grants on testnet (its testnet switch is hidden: tap the version number 7 times, then *Switch to testnet (diana)*), but it can't sign EVM transactions yet. For token approvals, Unyoke shows a QR code that opens the same scan straight in the QoreX app (through QoreX's `link.qore.network/browse` link); MetaMask or Rabby also work inside an EVM access window opened in QoreX.
 - **Clearing 7702 consent isn't tested yet.** Unyoke builds the `MsgClearEVMDelegation` message, but QoreX may refuse to display it, as it does `MsgCloseEVMWindow`. If it does, Unyoke shows that message instead of failing silently.
-- **Not audited.** It's a client-side tool with 93 unit tests, and it only ever sends revocations: setting things to zero or removing them.
+- **Not audited.** It's a client-side tool with 96 unit tests, and it only ever sends revocations: setting things to zero or removing them.
 
 ## Architecture
 
@@ -239,6 +239,7 @@ flowchart TB
 | `src/ui/` | Landing page, scanner, results, receipt, revoke history, transaction page, testnet sandbox, desktop-to-phone QR hand-off |
 | `scripts/e2e-testnet.ts` | `pnpm e2e:testnet`: create → scan → revoke → re-scan on testnet, with Unyoke's own code |
 | `scripts/seed-demo.ts` | Gives a throwaway testnet account a set of permissions for demos |
+| `contracts/PqcKeyCheck.sol` | Reads an account's post-quantum key from the PQC Key Status precompile (`0x…0a02`); each scan asks it whether the key is registered and proven |
 | `deploy/` | Caddy site and a one-command VPS setup |
 | `docs/SPIKE_RESULTS.md` | What QoreX will and won't sign for a website, with transactions |
 
@@ -247,7 +248,7 @@ flowchart TB
 ```bash
 pnpm install
 pnpm dev            # http://localhost:5173 (proxies /lcd-testnet to the REST API)
-pnpm test           # 87 unit tests
+pnpm test           # unit tests
 pnpm typecheck
 pnpm build
 ```
@@ -271,6 +272,15 @@ pnpm e2e:testnet
 ```
 
 It creates an unlimited fUSD approval, an `authz` grant and a fee grant on a throwaway account, checks that Unyoke's scanner finds all three with the right risk, revokes each with the exact call or message Unyoke builds (the EVM one inside a window limited to fUSD and one transaction), then scans again: all three must be gone, listed in the revoke history, and the window record must show "this token only, 1 tx". The first run makes a brand-new throwaway account, saves its phrase to the git-ignored `.env.seed` and asks you to send it 1 test QOR; it registers the account's post-quantum key by itself. It refuses Unyoke's sample account.
+
+**Other testnet scripts**, all from the same throwaway account in `.env.seed`:
+
+```bash
+pnpm build:contract      # compile contracts/PqcKeyCheck.sol into src/lib/pqcKeyCheckArtifact.ts
+pnpm deploy:pqc-check    # deploy it through a 1-transaction window, then read the sample account's key with it
+pnpm amm:swap            # swap 0.01 test QOR in the native AMM pool with the most QOR
+pnpm qoreseal:register   # publish the account's QoreSeal (ML-KEM-1024) key, derived from its own phrase
+```
 
 Demo data on a **throwaway** testnet account (never a real one; the script refuses accounts holding more than 50 QOR): put its phrase in a git-ignored `.env.seed` as `SEED_MNEMONIC`, then `pnpm seed:demo`.
 
