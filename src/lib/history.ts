@@ -90,11 +90,28 @@ export function parseNativeRevocations(body: unknown, granter: string): NativeRe
   return out.sort((a, b) => b.height - a.height);
 }
 
-/** The account's native revokes that the node still has, newest first. */
+/**
+ * The account's native revokes that the node still has, newest first. One
+ * search per revoke type, so a busy account's other transactions can't push
+ * older revokes out of the result.
+ */
 export async function readNativeRevocations(rest: string, qor: string, fetchFn: FetchLike = fetch): Promise<NativeRevocation[]> {
   const base = rest.replace(/\/$/, "");
-  const query = encodeURIComponent(`message.sender='${qor}'`);
-  const res = await fetchFn(`${base}/cosmos/tx/v1beta1/txs?query=${query}&order_by=2&pagination.limit=100`);
-  if (!res.ok) throw new Error(`Transaction search failed (HTTP ${res.status}).`);
-  return parseNativeRevocations(await res.json(), qor);
+  const lists = await Promise.all(
+    Object.keys(REVOKE_TYPES).map(async (type) => {
+      const query = encodeURIComponent(`message.sender='${qor}' AND message.action='${type}'`);
+      const res = await fetchFn(`${base}/cosmos/tx/v1beta1/txs?query=${query}&order_by=2&pagination.limit=100`);
+      if (!res.ok) throw new Error(`Transaction search failed (HTTP ${res.status}).`);
+      return parseNativeRevocations(await res.json(), qor);
+    }),
+  );
+  // a transaction with two revoke types shows up in both searches
+  const seen = new Set<string>();
+  return lists
+    .flat()
+    .filter((r) => {
+      const k = `${r.txHash}:${r.kind}:${r.grantee}:${r.msgTypeUrl ?? ""}`;
+      return seen.has(k) ? false : (seen.add(k), true);
+    })
+    .sort((a, b) => b.height - a.height);
 }

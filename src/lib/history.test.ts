@@ -76,14 +76,17 @@ describe("parseNativeRevocations", () => {
 });
 
 describe("readNativeRevocations", () => {
-  it("searches the account's own transactions, newest first", async () => {
-    let asked = "";
-    await readNativeRevocations("/lcd-testnet/", ME, async (url) => {
-      asked = url;
+  it("searches the account's own revokes, one search per revoke type, newest first", async () => {
+    const asked: string[] = [];
+    const got = await readNativeRevocations("/lcd-testnet/", ME, async (url) => {
+      asked.push(decodeURIComponent(url));
       return { ok: true, status: 200, json: async () => SEARCH };
     });
-    expect(decodeURIComponent(asked)).toContain(`message.sender='${ME}'`);
-    expect(asked).toContain("order_by=2");
+    expect(asked).toHaveLength(3);
+    expect(asked.every((u) => u.includes(`message.sender='${ME}' AND message.action='/`) && u.includes("order_by=2"))).toBe(true);
+    expect(asked.some((u) => u.includes("message.action='/cosmos.authz.v1beta1.MsgRevoke'"))).toBe(true);
+    // the same transaction returned by several searches is listed once
+    expect(got).toEqual(parseNativeRevocations(SEARCH, ME));
   });
 
   it("reports a failed search", async () => {
