@@ -71,11 +71,11 @@ Light and dark themes: Unyoke follows your system setting until you pick one wit
 |---|---|---|
 | ERC-20 approvals | `Approval` events from the account, in 10,000-block chunks, 4 at a time; then the **live** `allowance()` for each pair, so spent or replaced approvals drop out | `approve(spender, 0)` |
 | NFT approve-all | `ApprovalForAll` events, then the live `isApprovedForAll()` | `setApprovalForAll(operator, false)` |
-| `authz` grants | `GET /cosmos/authz/v1beta1/grants/granter/{addr}` | `MsgRevoke` |
-| Fee grants | `GET /cosmos/feegrant/v1beta1/issued/{addr}` | `MsgRevokeAllowance` |
+| `authz` grants | `GET /cosmos/authz/v1beta1/grants/granter/{addr}`, every page | `MsgRevoke` |
+| Fee grants | `GET /cosmos/feegrant/v1beta1/issued/{addr}`, every page | `MsgRevokeAllowance` |
 | EIP-7702 consent | `GET /qorechain/pqc/v1/evm_delegation_consent/{addr}` | `MsgClearEVMDelegation` |
 
-Each approval also shows the token's name and decimals, your current balance, whether the spender is a contract or an ordinary wallet, and the block and transaction that set it. Scanning the whole kept history (about 1.47 million testnet blocks) takes around 20 seconds.
+Each approval also shows the token's name and decimals, your current balance, whether the spender is a contract or an ordinary wallet, and the block and transaction that set it. Scanning the whole kept history (about 1.6 million testnet blocks, and growing) takes around 30 seconds.
 
 **Account kinds.** QoreX's default account is Cosmos-style (coin 118): its 0x form is only a re-encoding, it can't sign EVM transactions, so it can't give token approvals. Unyoke reads the account's key type from the chain and says so instead of offering token actions that would fail. Ethereum-style accounts (coin 60, *Add an Ethereum account* in QoreX) have both lanes.
 
