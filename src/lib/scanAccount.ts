@@ -16,7 +16,6 @@ import { earliestLogBlock, getLogsFrom, latestPerPair, scanApprovalEvents } from
 import { type ChainReader, type LiveApproval, readLiveApprovals, readTokenInfo } from "./evmApprovalState";
 import { type EvmRevocation, type NativeRevocation, evmRevocations, readNativeRevocations } from "./history";
 import { type FetchLike, type NativePermission, readNativePermissions } from "./nativePermissions";
-import { type LinkedKeys, readLinkedKeys } from "./linkedKeys";
 import { type PqcKeyStatus, readPqcKey } from "./pqcKey";
 
 /** What the scan needs from an EVM JSON-RPC client (a viem PublicClient fits). */
@@ -37,8 +36,6 @@ export interface ScanResult {
   accountKind: AccountKind;
   /** The post-quantum signature key, read through PqcKeyCheck; absent when it couldn't be read. */
   pqcKey?: PqcKeyStatus;
-  /** Foreign keys linked to act for the account; absent when they couldn't be read. */
-  linkedKeys?: LinkedKeys;
   evm: LiveApproval[];
   native: NativePermission[];
   /** First and last block whose EVM logs were read. */
@@ -82,7 +79,6 @@ export async function scanAccount(opts: ScanOptions): Promise<ScanResult> {
 
   const kindPromise = readAccountKind(opts.rest, account.qor, opts.fetchFn);
   const pqcKeyPromise = readPqcKey(opts.evm, account.evm as Hex);
-  const linkedKeysPromise = readLinkedKeys(opts.rest, account.qor, opts.fetchFn);
   const nativeHistoryPromise = readNativeRevocations(opts.rest, account.qor, opts.fetchFn).then(
     (native) => ({ native }),
     (e) => ({ native: [] as NativeRevocation[], nativeError: message(e) }),
@@ -124,13 +120,11 @@ export async function scanAccount(opts: ScanOptions): Promise<ScanResult> {
   const nativeHistory = await nativeHistoryPromise;
   const accountKind = await kindPromise;
   const pqcKey = await pqcKeyPromise;
-  const linkedKeys = await linkedKeysPromise;
   progress({ stage: "done" });
   return {
     account,
     accountKind,
     pqcKey,
-    linkedKeys,
     evm,
     scannedFrom,
     scannedTo,
