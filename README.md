@@ -218,7 +218,7 @@ flowchart TB
         Caddy["Caddy: static files<br/>+ read-only /lcd-testnet relay"]
     end
     subgraph Chain["QoreChain testnet (qorechain-diana)"]
-        EVM["EVM JSON-RPC<br/>events · allowance · isApprovedForAll"]
+        EVM["EVM JSON-RPC<br/>events · allowance · isApprovedForAll<br/>PqcKeyCheck → PQC precompile"]
         REST["REST<br/>authz · feegrant · 7702 consent · windows"]
     end
     UI -->|scan| EVM
@@ -233,6 +233,7 @@ flowchart TB
 | `src/lib/evmApprovalState.ts` | Live allowance, balance, token info, contract check |
 | `src/lib/nativePermissions.ts` | Reads and parses `authz`, fee grants and 7702 consent; builds revoke messages |
 | `src/lib/risk.ts` | The risk rules |
+| `src/lib/pqcKey.ts` | Reads the account's post-quantum key through PqcKeyCheck and puts it in one sentence |
 | `src/lib/revoke.ts` | Revoke calls, permission keys, and reading the window back as evidence |
 | `src/lib/history.ts` | Revoke history: zeroed approvals from the log scan, native revokes from the tx search |
 | `src/lib/txDetails.ts` | Explains a transaction: messages, decoded EVM calls, hybrid-signature verdict, window used |
