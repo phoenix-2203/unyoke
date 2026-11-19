@@ -179,6 +179,7 @@ The approval and its revoke went through **different** windows, each used up by 
 | Shows the post-quantum window used | ✅ on the receipt | ❌ | ❌ | ❌ |
 | Plain-language risk | ✅ tested rules | Varies | Varies | ❌ |
 | Revoke history for the account | ✅ both lanes, any tool | Some, EVM only | ❌ | ❌ |
+| Post-quantum key status | ✅ registered and proven, read on chain | ❌ | ❌ | ✅ if you know the query |
 | Needs a terminal or keys on disk | No | No | No | Yes |
 
 **What we learned from others (not copied):** revoke.cash's list of approvals by token and spender, and Rabby's habit of explaining what a signature does in one sentence. What none of them do is cover both of QoreChain's lanes and prove each removal on chain.
