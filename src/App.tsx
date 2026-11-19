@@ -6,7 +6,8 @@ import { AppPage } from "./ui/AppPage";
 import { LandingPage } from "./ui/LandingPage";
 import { LogoMark } from "./ui/Logo";
 import { TxPage } from "./ui/TxPage";
-import { ArrowRight, BookIcon, GitHubIcon, TrophyIcon } from "./ui/icons";
+import { ArrowRight, BookIcon, GitHubIcon, MoonIcon, SunIcon, TrophyIcon } from "./ui/icons";
+import type { Theme } from "./ui/theme";
 
 /** The day-1 wallet test page stays reachable at ?spike for re-testing QoreX. */
 const showSpike = new URLSearchParams(window.location.search).has("spike");
@@ -19,7 +20,7 @@ function IconLink({ href, label, children }: { href: string; label: string; chil
   );
 }
 
-export function App() {
+export function App({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: () => void }) {
   const { route, search } = useRoute();
   const { data: block } = useBlockNumber({ watch: true });
   const address = search.get("address") ?? undefined;
@@ -49,6 +50,15 @@ export function App() {
               <GitHubIcon size={17} />
             </IconLink>
           </div>
+          <button
+            type="button"
+            className="icon-btn theme-toggle"
+            onClick={onToggleTheme}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Light mode" : "Dark mode"}
+          >
+            {theme === "dark" ? <SunIcon size={17} /> : <MoonIcon size={17} />}
+          </button>
           {route === "app" ? (
             <ConnectButton chainStatus="none" showBalance={false} accountStatus="address" />
           ) : (

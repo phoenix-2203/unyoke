@@ -1343,6 +1343,13 @@ button.revoke {
   transform: translateY(-1px);
 }
 
+.theme-toggle {
+  padding: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+}
+
 .btn-link {
   display: inline-flex;
   align-items: center;
