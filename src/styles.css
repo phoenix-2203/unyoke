@@ -41,6 +41,39 @@
   -webkit-font-smoothing: antialiased;
 }
 
+/* Light theme: warm paper, ink text, the same lime used as a fill (not as text). */
+:root[data-theme="light"] {
+  --bg: #f5f4ef;
+  --surface: #ffffff;
+  --surface-2: #efeee8;
+  --line: rgba(17, 19, 23, 0.11);
+  --line-soft: rgba(17, 19, 23, 0.06);
+  --text: #121418;
+  --muted: #565b65;
+  --faint: #868b95;
+  --high: #d4282a;
+  --medium: #a85f00;
+  --low: #13803b;
+  --evm: #3552c8;
+  --native: #7536d6;
+  --ink-rgb: 17, 19, 23;
+  --accent-rgb: 104, 140, 0;
+  --high-rgb: 212, 40, 42;
+  --medium-rgb: 168, 95, 0;
+  --low-rgb: 19, 128, 59;
+  --evm-rgb: 53, 82, 200;
+  --native-rgb: 117, 54, 214;
+  --accent-text: #4a6600;
+  --shadow-k: 0.14;
+  --header-bg: rgba(255, 255, 255, 0.78);
+  --note-text: #6e4c08;
+  --node-fill: #ffffff;
+  --node-fill-accent: #f1f8d8;
+  --on-high: #ffffff;
+  --grain: 0.035;
+  color-scheme: light;
+}
+
 * {
   box-sizing: border-box;
 }
