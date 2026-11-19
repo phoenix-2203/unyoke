@@ -55,6 +55,16 @@ export function evmApprovalRisk(a: LiveApproval, headBlock: bigint): Risk {
 const SEND_LIKE = new Set(["/cosmos.bank.v1beta1.MsgSend", "/cosmos.bank.v1beta1.MsgMultiSend", "/ibc.applications.transfer.v1.MsgTransfer"]);
 const STAKE_LIKE = /^\/cosmos\.staking\.v1beta1\./;
 
+/** Messages that hand over more than their name suggests, with the reason shown to the user. */
+const POWERFUL: [RegExp, string][] = [
+  [/^\/cosmos\.authz\.v1beta1\.MsgGrant$/, "It can create new grants from your account, including ones that move funds."],
+  [/^\/cosmos\.authz\.v1beta1\.MsgExec$/, "It can run messages as you through other grants."],
+  [/^\/cosmos\.feegrant\.v1beta1\.MsgGrantAllowance$/, "It can hand your QOR out as fee allowances to anyone."],
+  [/^\/cosmos\.distribution\.v1beta1\.MsgSetWithdrawAddress$/, "It can send all your future staking rewards to another address."],
+  [/\.MsgConvert(Coin|ERC20)$/, "It can move your tokens between the native and EVM lanes, to a receiver it picks."],
+  [/^\/cosmos\.evm\.vm\.v1\.MsgEthereumTx$/, "It can send EVM transactions as you."],
+];
+
 export function nativePermissionRisk(p: NativePermission): Risk {
   switch (p.kind) {
     case "authz": {
@@ -63,6 +73,9 @@ export function nativePermissionRisk(p: NativePermission): Risk {
       if (p.msgTypeUrl && SEND_LIKE.has(p.msgTypeUrl)) {
         level = "high";
         reasons.push(p.spendLimit ? "It can send your funds, up to its limit." : "It can send your funds with no limit.");
+      } else if (p.msgTypeUrl && POWERFUL.some(([re]) => re.test(p.msgTypeUrl!))) {
+        level = "high";
+        reasons.push(POWERFUL.find(([re]) => re.test(p.msgTypeUrl!))![1]);
       } else if (p.msgTypeUrl === undefined) {
         level = "high";
         reasons.push("Unyoke can't tell what this grant allows. Treat it as dangerous.");

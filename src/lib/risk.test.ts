@@ -72,6 +72,23 @@ describe("nativePermissionRisk", () => {
     expect(nativePermissionRisk({ kind: "authz", ...base, authorizationType: "/x.Custom" }).level).toBe("high");
   });
 
+  it("grants that hand over more than their name says are high", () => {
+    for (const msgTypeUrl of [
+      "/cosmos.authz.v1beta1.MsgGrant",
+      "/cosmos.authz.v1beta1.MsgExec",
+      "/cosmos.feegrant.v1beta1.MsgGrantAllowance",
+      "/cosmos.distribution.v1beta1.MsgSetWithdrawAddress",
+      "/cosmos.evm.erc20.v1.MsgConvertCoin",
+      "/cosmos.evm.vm.v1.MsgEthereumTx",
+    ]) {
+      const r = nativePermissionRisk({ kind: "authz", ...base, authorizationType: "/cosmos.authz.v1beta1.GenericAuthorization", msgTypeUrl });
+      expect(r.level, msgTypeUrl).toBe("high");
+      expect(r.reasons[0]).not.toMatch(/messages for you/);
+    }
+    // an ordinary message type stays medium
+    expect(nativePermissionRisk({ kind: "authz", ...base, authorizationType: "g", msgTypeUrl: "/cosmos.distribution.v1beta1.MsgWithdrawDelegatorReward" }).level).toBe("medium");
+  });
+
   it("vote grants are low, stake grants medium", () => {
     expect(nativePermissionRisk({ kind: "authz", ...base, authorizationType: "g", msgTypeUrl: "/cosmos.gov.v1.MsgVote" }).level).toBe("low");
     expect(nativePermissionRisk({ kind: "authz", ...base, authorizationType: "s", msgTypeUrl: "/cosmos.staking.v1beta1.MsgDelegate" }).level).toBe("medium");
