@@ -91,6 +91,7 @@ The rules live in one tested file ([`src/lib/risk.ts`](src/lib/risk.ts)), so the
 | Spender is an ordinary wallet, not a contract | Approval older than about a week | Vote-only `authz` grant |
 | NFT approve-all | `authz` that can move your stake | Fee grant with a spending limit |
 | `authz` that can send funds, or that Unyoke can't read | Fee grant with no limit | Expired 7702 consent |
+| `authz` for messages that hand over more than they say: `MsgGrant`, `MsgExec`, `MsgGrantAllowance`, `MsgSetWithdrawAddress`, lane conversions, EVM transactions | Any other `authz` message type | |
 | Live EIP-7702 consent | | |
 
 "Never expires" is added as a reason wherever it applies.
