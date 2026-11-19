@@ -239,7 +239,7 @@ flowchart TB
 | `src/ui/` | Landing page, scanner, results, receipt, revoke history, transaction page, testnet sandbox, desktop-to-phone QR hand-off |
 | `scripts/e2e-testnet.ts` | `pnpm e2e:testnet`: create → scan → revoke → re-scan on testnet, with Unyoke's own code |
 | `scripts/seed-demo.ts` | Gives a throwaway testnet account a set of permissions for demos |
-| `contracts/PqcKeyCheck.sol` | Reads an account's post-quantum key from the PQC Key Status precompile (`0x…0a02`); each scan asks it whether the key is registered and proven |
+| `contracts/PqcKeyCheck.sol` | Reads an account's post-quantum key from the PQC Key Status precompile (`0x…0a02`); each scan asks it whether the key is registered and proven. On testnet at [`0xC4d2b554…1Cb5f9`](https://unyoke.duckdns.org/tx/0x897b95cefe4cd9b7a3c5e8fc1df9dc6767fb1e4f9f4a21b06ea3b50ba4dab406) |
 | `deploy/` | Caddy site and a one-command VPS setup |
 | `docs/SPIKE_RESULTS.md` | What QoreX will and won't sign for a website, with transactions |
 
