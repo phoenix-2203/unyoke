@@ -9,10 +9,10 @@
  * see approvals made since its lowest kept block. The result says where that
  * is, so the UI can be honest about it.
  */
-import { type Hex, toHex } from "viem";
+import type { Hex } from "viem";
 import { type AccountKind, readAccountKind } from "./accountKind";
 import { type AccountAddresses, parseAccount } from "./address";
-import { type GetLogs, earliestLogBlock, latestPerPair, scanApprovalEvents } from "./evmApprovalLogs";
+import { earliestLogBlock, getLogsFrom, latestPerPair, scanApprovalEvents } from "./evmApprovalLogs";
 import { type ChainReader, type LiveApproval, readLiveApprovals, readTokenInfo } from "./evmApprovalState";
 import { type EvmRevocation, type NativeRevocation, evmRevocations, readNativeRevocations } from "./history";
 import { type FetchLike, type NativePermission, readNativePermissions } from "./nativePermissions";
@@ -63,13 +63,7 @@ export interface ScanOptions {
   signal?: AbortSignal;
 }
 
-export function getLogsFrom(client: Pick<EvmClient, "request">): GetLogs {
-  return async (f) =>
-    (await client.request({
-      method: "eth_getLogs",
-      params: [{ fromBlock: toHex(f.fromBlock), toBlock: toHex(f.toBlock), topics: f.topics }],
-    })) as Awaited<ReturnType<GetLogs>>;
-}
+export { getLogsFrom } from "./evmApprovalLogs";
 
 const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
 

@@ -6,9 +6,9 @@
 import { qorechainTestnet } from "@qorechain/evm";
 import { useQuery } from "@tanstack/react-query";
 import { useBlockNumber, usePublicClient } from "wagmi";
-import { APPROVAL_TOPIC, decodeApprovalLog } from "../lib/evmApprovalLogs";
+import { APPROVAL_TOPIC, decodeApprovalLog, getLogsFrom } from "../lib/evmApprovalLogs";
 import { isUnlimited } from "../lib/format";
-import { type EvmClient, getLogsFrom } from "../lib/scanAccount";
+import type { EvmClient } from "../lib/scanAccount";
 
 /** ~22 hours of testnet blocks (6 calls of 10,000). */
 const WINDOW = 60_000n;

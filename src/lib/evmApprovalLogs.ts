@@ -10,7 +10,7 @@
  * history: the latest event per (token, spender) is a candidate, and the
  * current on-chain state is checked separately (see evmApprovalState.ts).
  */
-import { type Hex, pad } from "viem";
+import { type Hex, pad, toHex } from "viem";
 
 /** keccak256("Approval(address,address,uint256)"), shared by ERC-20 and ERC-721. */
 export const APPROVAL_TOPIC = "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925" as const;
@@ -167,4 +167,13 @@ export async function earliestLogBlock(getLogs: GetLogs): Promise<bigint> {
     if (lowest === null) throw e;
     return lowest;
   }
+}
+
+/** eth_getLogs through any client with an EIP-1193 `request` (a viem PublicClient fits). */
+export function getLogsFrom(client: { request(args: { method: "eth_getLogs"; params: [unknown] }): Promise<unknown> }): GetLogs {
+  return async (f) =>
+    (await client.request({
+      method: "eth_getLogs",
+      params: [{ fromBlock: toHex(f.fromBlock), toBlock: toHex(f.toBlock), topics: f.topics }],
+    })) as Awaited<ReturnType<GetLogs>>;
 }
