@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { serializeTransaction } from "viem";
 import { parseTxDetails } from "./txDetails";
 
 // Trimmed from real testnet responses (17–18 Nov 2026).
@@ -101,6 +102,25 @@ describe("parseTxDetails", () => {
     expect(d.evmHash).toBe("0x9c35be14c94f13397fa59755f5e670fe944c08314089f4ca8be3ac215167f130");
     expect(d.hybrid).toBeUndefined();
     expect(d.fee).toContain("QOR");
+  });
+
+  it("names the contract a creation made, from the sender and nonce", () => {
+    // The PqcKeyCheck deployment on testnet (19 Nov 2026): from 0x7448…9b22 at nonce 19 it made 0xC4d2…b5f9.
+    // The signature is a placeholder; only the fields the page reads matter.
+    const raw = serializeTransaction(
+      { chainId: 9800, type: "eip1559", nonce: 19, gas: 400_000n, maxFeePerGas: 1n, maxPriorityFeePerGas: 1n, data: "0x6080" },
+      { r: "0x01", s: "0x01", yParity: 0 },
+    );
+    const d = parseTxDetails({
+      tx: { body: { messages: [{ "@type": "/cosmos.evm.vm.v1.MsgEthereumTx", raw }] } },
+      tx_response: {
+        txhash: "37E829C0",
+        code: 0,
+        events: [{ type: "message", attributes: [{ key: "module", value: "evm" }, { key: "sender", value: "0x7448bf4a7963e81ab4f93b118159a91b7cad9b22" }] }],
+      },
+    });
+    expect(d.messages[0].fields).toContainEqual(["Created contract", "0xC4d2b554BE4014656cf5938b5e2F0561011Cb5f9"]);
+    expect(d.messages[0].summary).toBe("Created the contract 0xC4d2…b5f9.");
   });
 
   it("describes a scoped window", () => {

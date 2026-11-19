@@ -7,7 +7,7 @@
  * Unyoke shows this on its own /tx page because the public explorer opens on
  * mainnet and has no link that lands on testnet.
  */
-import { type Hex, decodeFunctionData, erc20Abi, formatUnits, parseTransaction } from "viem";
+import { type Hex, decodeFunctionData, erc20Abi, formatUnits, getContractAddress, isAddress, parseTransaction } from "viem";
 import { approvalForAllAbi } from "./evmApprovalState";
 import { formatQor, isUnlimited, shortAddress } from "./format";
 
@@ -54,11 +54,23 @@ function feeText(fee: { amount?: { denom: string; amount: string }[] } | undefin
   return `${c.amount} ${c.denom}`;
 }
 
-function describeEvm(raw: string): TxMessage {
+/**
+ * `sender` (the EVM "from", read from the tx events) lets a contract creation
+ * name the contract it made: its address follows from the sender and nonce.
+ */
+function describeEvm(raw: string, sender?: string): TxMessage {
   try {
     const tx = parseTransaction(raw as Hex);
     const to = tx.to ?? undefined;
-    const fields: [string, string][] = [["Contract", to ?? "—"]];
+    if (!to) {
+      const created = sender && isAddress(sender) && tx.nonce !== undefined ? getContractAddress({ from: sender, nonce: BigInt(tx.nonce) }) : undefined;
+      return {
+        type: "EVM transaction",
+        summary: created ? `Created the contract ${shortAddress(created)}.` : "EVM contract creation.",
+        fields: [["Created contract", created ?? "—"]],
+      };
+    }
+    const fields: [string, string][] = [["Contract", to]];
     if (tx.data && tx.data !== "0x") {
       for (const abi of [erc20Abi, approvalForAllAbi] as const) {
         try {
@@ -87,13 +99,13 @@ function describeEvm(raw: string): TxMessage {
         }
       }
     }
-    return { type: "EVM transaction", summary: to ? `EVM transaction to ${shortAddress(to)}.` : "EVM contract creation.", fields };
+    return { type: "EVM transaction", summary: `EVM transaction to ${shortAddress(to)}.`, fields };
   } catch {
     return { type: "EVM transaction", summary: "EVM transaction.", fields: [] };
   }
 }
 
-function describeMessage(m: Record<string, unknown>): TxMessage {
+function describeMessage(m: Record<string, unknown>, evmSender?: string): TxMessage {
   const typeUrl = String(m["@type"] ?? "");
   switch (typeUrl) {
     case "/cosmos.authz.v1beta1.MsgRevoke":
@@ -129,7 +141,7 @@ function describeMessage(m: Record<string, unknown>): TxMessage {
       };
     }
     case "/cosmos.evm.vm.v1.MsgEthereumTx":
-      return describeEvm(String(m.raw ?? ""));
+      return describeEvm(String(m.raw ?? ""), evmSender);
     default:
       return { type: short(typeUrl), summary: `${short(typeUrl)} message.`, fields: [] };
   }
@@ -152,6 +164,8 @@ export function parseTxDetails(body: unknown): TxDetails {
   const used = find("pqc_evm_window_used");
   const usedA = attrs(used);
   const eth = attrs(find("ethereum_tx"));
+  // The EVM module's message event names the 0x sender.
+  const evmSender = events.filter((e) => e.type === "message").map(attrs).find((a) => a.module === "evm")?.sender;
 
   return {
     hash: (r.txhash ?? "").toUpperCase(),
@@ -163,7 +177,7 @@ export function parseTxDetails(body: unknown): TxDetails {
     fee: feeText(b.tx?.auth_info?.fee),
     gasUsed: r.gas_used ? Number(r.gas_used) : undefined,
     gasWanted: r.gas_wanted ? Number(r.gas_wanted) : undefined,
-    messages: (b.tx?.body?.messages ?? []).map(describeMessage),
+    messages: (b.tx?.body?.messages ?? []).map((m) => describeMessage(m, evmSender)),
     hybrid: hybridExt || verify.status ? { attached: hybridExt, verified: verify.status === "verified", algorithm: verify.algorithm_id } : undefined,
     windowUsed: used ? { openHeight: Number(usedA.window_open_height ?? 0), usedTxs: Number(usedA.used_txs ?? 0), usedValue: usedA.used_value ?? "0" } : undefined,
     evmHash: eth.ethereumTxHash,
