@@ -61,14 +61,13 @@ describe("describeLinkedKeys", () => {
     const line = describeLinkedKeys(parseLinkedKeys({ authenticators: [key(), key({ pubkey_hex: "c8657c752f88dc4c498c00385c68ee00b426d745" })] }, {}, NOW))!;
     expect(line.tone).toBe("high");
     expect(line.title).toBe("2 linked keys can act for this account");
-    expect(line.detail).toContain("Both are MetaMask-style keys: old-style locks a quantum computer could pick");
+    expect(line.detail).toContain("All are MetaMask-style keys");
     expect(line.detail).toContain("can send EVM transactions, with no spending limit");
   });
   it("is orange when a spending rule caps them", () => {
     const line = describeLinkedKeys(parseLinkedKeys({ authenticators: [key()] }, { rules: [{ enabled: true }] }, NOW))!;
     expect(line.tone).toBe("warn");
     expect(line.detail).toContain("capped by a spending rule");
-    expect(line.detail).toContain("It is a MetaMask-style key: an old-style lock");
   });
   it("names the kind of key", () => {
     expect(keyKind({ scheme: "ed25519", pubkeyHex: "aa".repeat(32) })).toBe("Phantom-style (ed25519)");

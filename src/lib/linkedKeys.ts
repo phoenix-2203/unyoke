@@ -115,15 +115,13 @@ export function describeLinkedKeys(k: LinkedKeys): LinkedKeysLine | undefined {
   const anyAll = k.live.some((x) => x.permissions.includes("all"));
   const until = new Date(Math.max(...k.live.map((x) => x.expiryUnix)) * 1000).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 
-  const who =
-    n === 1 ? `It is a ${kinds[0]} key` : kinds.length === 1 ? `${n === 2 ? "Both" : "All"} are ${kinds[0]} keys` : `They are ${listWords(kinds)} keys`;
-  const lock = n === 1 ? "an old-style lock a quantum computer could pick" : "old-style locks a quantum computer could pick";
+  const who = n === 1 ? `It is a ${kinds[0]} key` : kinds.length === 1 ? `All are ${kinds[0]} keys` : `They are ${listWords(kinds)} keys`;
   const can = `${n === 1 ? "It" : "They"} can ${listWords(perms.map((p) => PERMISSION_WORDS[p] ?? p))}`;
   const bound =
     valueKeys.length === 0 ? "" : unbounded.length === 0 ? ", capped by a spending rule" : unbounded.length === valueKeys.length ? ", with no spending limit" : `; ${unbounded.length} of them with no spending limit`;
   return {
     tone: unbounded.length > 0 || anyAll ? "high" : "warn",
     title: `${n} linked key${n === 1 ? "" : "s"} can act for this account`,
-    detail: `${who}: ${lock}, linked to a post-quantum account. ${can}${bound}, until ${until}.`,
+    detail: `${who}: an old-style lock a quantum computer could pick, linked to a post-quantum account. ${can}${bound}, until ${until}.`,
   };
 }
