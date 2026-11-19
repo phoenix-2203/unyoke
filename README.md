@@ -38,7 +38,7 @@ QoreChain inherits all of that through its EVM lane, and adds a second lane with
 
 Three things make this worse on QoreChain than on a single-lane chain:
 
-1. **Nothing lists both lanes.** EVM revoke tools can't see `authz`, fee grants or QoreChain's 7702 consent, and can't sign native messages. The native lane only offers raw REST endpoints and the command line.
+1. **Nothing lists both lanes.** EVM revoke tools can't see `authz`, fee grants or QoreChain's 7702 consent, and can't sign native messages. The native lane only offers raw REST endpoints and the command line. QoreX can sign a revoke, but it doesn't list your permissions: its *Connected sites → Revoke* only disconnects a website, and an approval given to that site's contract stays open.
 2. **QoreChain's post-quantum guard doesn't cover old approvals.** Every EVM transaction needs a short authorisation window opened with the account's ML-DSA-87 key. That window limits *sending* transactions, but an approval granted through it stays open after the window is used up. We checked: the window for our test approval was used up by that one transaction, and the allowance stayed open until Unyoke revoked it ([txs below](#proven-on-testnet)).
 3. **Old history disappears.** The public testnet node keeps history only from block 8,790,799. Approvals set before that can't be found from history by anyone using it. Unyoke says so instead of showing a false "all clear".
 
