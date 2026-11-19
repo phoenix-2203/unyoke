@@ -62,6 +62,7 @@ flowchart LR
 4. **Verify.** After the transaction confirms, Unyoke reads the allowance or the grant again. Only then does it say **Revoked ✓**.
 5. **Keep a receipt.** Every removal is listed with its transaction and, for token revokes, the exact window QoreX opened ("this token only, 1 tx, used up"). **Copy receipt** gives you a markdown table.
 6. **See the history.** Each scan also lists the permissions this account has already removed, read from the chain: allowances set to 0, approve-all turned off, and `authz`, fee-grant and 7702 revokes. It includes revokes made with any tool, marks the ones sent through Unyoke, and looks the same to anyone who scans the address.
+7. **Check the post-quantum key.** Each scan reads whether the account has a registered ML-DSA-87 key, and whether it was registered with a proof of possession, through Unyoke's own [`PqcKeyCheck`](contracts/PqcKeyCheck.sol) contract on testnet. Native revokes and EVM windows both need that key.
 
 Light and dark themes: Unyoke follows your system setting until you pick one with the sun/moon button, and remembers your choice.
 
