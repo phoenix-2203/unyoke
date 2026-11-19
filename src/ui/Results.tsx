@@ -1,4 +1,5 @@
 import type { LiveApproval } from "../lib/evmApprovalState";
+import { type PqcKeyStatus, describePqcKey } from "../lib/pqcKey";
 import { formatQor, formatTokenAmount, shortAddress } from "../lib/format";
 import type { NativePermission } from "../lib/nativePermissions";
 import { type Risk, type RiskLevel, evmApprovalRisk, nativePermissionRisk, sortByRisk } from "../lib/risk";
@@ -22,6 +23,19 @@ function RiskTag({ level }: { level: RiskLevel }) {
       <span className={`dot ${level}`} />
       {level}
     </span>
+  );
+}
+
+function PqcKeyNote({ k }: { k: PqcKeyStatus }) {
+  const line = describePqcKey(k);
+  return (
+    <div className={`pq-key ${line.tone}`}>
+      <span className={`dot ${line.tone === "ok" ? "low" : "medium"}`} />
+      <span>
+        <b>{line.title}.</b> {line.detail}{" "}
+        <span className="pq-key-src mono">read on chain by PqcKeyCheck</span>
+      </span>
+    </div>
   );
 }
 
@@ -52,6 +66,8 @@ export function Results({ r, example = false, actions }: { r: ScanResult; exampl
           </div>
         ))}
       </div>
+
+      {r.pqcKey && !example && <PqcKeyNote k={r.pqcKey} />}
 
       {r.historyLimited && !example && (
         <div className="notice">
