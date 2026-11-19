@@ -5,7 +5,7 @@ import { WindowSpike } from "./spike/WindowSpike";
 import { AppPage } from "./ui/AppPage";
 import { LandingPage } from "./ui/LandingPage";
 import { LogoMark } from "./ui/Logo";
-import { TxPage } from "./ui/TxPage";
+import { TxPage, TxPathError } from "./ui/TxPage";
 import { ArrowRight, BookIcon, GitHubIcon, MoonIcon, SunIcon, TrophyIcon } from "./ui/icons";
 import type { Theme } from "./ui/theme";
 
@@ -71,8 +71,8 @@ export function App({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: () 
 
       {route === "app" ? (
         <AppPage key={address ?? ""} initialAddress={address} />
-      ) : route === "tx" && txHash ? (
-        <TxPage key={txHash} hash={txHash} />
+      ) : route === "tx" ? (
+        txHash ? <TxPage key={txHash} hash={txHash} /> : <TxPathError />
       ) : (
         <LandingPage />
       )}

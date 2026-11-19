@@ -125,3 +125,17 @@ function TxView({ tx }: { tx: TxDetails }) {
     </>
   );
 }
+
+/** /tx/<something that isn't a hash>: say so instead of silently showing the landing page. */
+export function TxPathError() {
+  return (
+    <div className="page tx-page">
+      <span className="kicker mono">transaction · qorechain testnet</span>
+      <h1 className="tx-title">That isn't a transaction hash</h1>
+      <p className="status-line error">A hash is 64 hex characters, with or without 0x in front.</p>
+      <p className="muted tx-foot">
+        <Link href="/app">Back to the scanner</Link>
+      </p>
+    </div>
+  );
+}
