@@ -1,13 +1,19 @@
+import { Suspense, lazy } from "react";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useBlockNumber } from "wagmi";
 import { LINKS, Link, txHashFromPath, useRoute } from "./router";
-import { WindowSpike } from "./spike/WindowSpike";
-import { AppPage } from "./ui/AppPage";
 import { LandingPage } from "./ui/LandingPage";
 import { LogoMark } from "./ui/Logo";
-import { TxPage, TxPathError } from "./ui/TxPage";
+
 import { ArrowRight, BookIcon, GitHubIcon, MoonIcon, SunIcon, TrophyIcon } from "./ui/icons";
 import type { Theme } from "./ui/theme";
+
+// The scanner, the transaction page and the wallet spike pull in the QoreChain SDK and cosmjs,
+// so they load on demand: the landing page stays light on a phone.
+const AppPage = lazy(() => import("./ui/AppPage").then((m) => ({ default: m.AppPage })));
+const TxPage = lazy(() => import("./ui/TxPage").then((m) => ({ default: m.TxPage })));
+const TxPathError = lazy(() => import("./ui/TxPage").then((m) => ({ default: m.TxPathError })));
+const WindowSpike = lazy(() => import("./spike/WindowSpike").then((m) => ({ default: m.WindowSpike })));
 
 /** The day-1 wallet test page stays reachable at ?spike for re-testing QoreX. */
 const showSpike = new URLSearchParams(window.location.search).has("spike");
@@ -69,19 +75,21 @@ export function App({ theme, onToggleTheme }: { theme: Theme; onToggleTheme: () 
         </div>
       </nav>
 
-      {route === "app" ? (
-        <AppPage key={address ?? ""} initialAddress={address} />
-      ) : route === "tx" ? (
-        txHash ? <TxPage key={txHash} hash={txHash} /> : <TxPathError />
-      ) : (
-        <LandingPage />
-      )}
+      <Suspense fallback={<div className="page page-loading" aria-busy="true" />}>
+        {route === "app" ? (
+          <AppPage key={address ?? ""} initialAddress={address} />
+        ) : route === "tx" ? (
+          txHash ? <TxPage key={txHash} hash={txHash} /> : <TxPathError />
+        ) : (
+          <LandingPage />
+        )}
 
-      {showSpike && (
-        <div className="spike">
-          <WindowSpike />
-        </div>
-      )}
+        {showSpike && (
+          <div className="spike">
+            <WindowSpike />
+          </div>
+        )}
+      </Suspense>
 
       <footer className="footer">
         <Link href="/" className="brand">

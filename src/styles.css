@@ -894,6 +894,11 @@ button.revoke {
   white-space: nowrap;
 }
 
+/* holds the page height while the scanner's code loads, so the footer doesn't jump */
+.page-loading {
+  min-height: 70vh;
+}
+
 .notice {
   display: flex;
   gap: 0.7rem;
