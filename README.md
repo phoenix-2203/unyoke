@@ -1,5 +1,7 @@
 # Unyoke
 
+[![Built on QoreChain](https://build.qorechain.io/badge/unyoke.svg)](https://build.qorechain.io/p/unyoke)
+
 **See every permission your QoreChain account has given away, and take it back.**
 
 A QoreChain account can hand out *standing permissions*: a token approval to a contract, an authz grant that lets another address act for you, a fee grant that spends your QOR, an EIP-7702 consent that lets a contract run as your account. Each one keeps working until you remove it, long after you've forgotten the app that asked. They live on two different lanes of the chain, so no single tool showed them all.
