@@ -272,6 +272,9 @@ export function LandingPage() {
         </p>
       </section>
 
+      <Compare />
+      <Faq />
+
       <section className="cta reveal">
         <h2>
           What have <em>you</em> handed out?
@@ -281,5 +284,88 @@ export function LandingPage() {
         </button>
       </section>
     </>
+  );
+}
+
+/** The same comparison as the README's "How it compares". */
+function Compare() {
+  const Y = (t = "") => <span className="cmp-yes">✓{t && <small> {t}</small>}</span>;
+  const N = <span className="cmp-no" aria-label="No">✕</span>;
+  const W = (t: string) => <span className="cmp-warn">{t}</span>;
+  const rows: [string, React.ReactNode, React.ReactNode, React.ReactNode, React.ReactNode][] = [
+    ["ERC-20 and NFT approvals", Y("find + revoke"), Y("on chains they support"), W("warn when signing"), N],
+    ["authz and fee grants", Y("find + revoke"), N, N, Y("if you know the commands")],
+    ["QoreChain EIP-7702 consent", Y("find"), N, N, Y()],
+    ["Someone else's address, read-only", Y(), Y(), N, Y()],
+    ["Checks the permission is really gone", Y("reads it again"), W("usually not"), W("n/a"), N],
+    ["Post-quantum key status", Y("read on chain"), N, N, Y("if you know the query")],
+    ["Revoke history for the account", Y("both lanes, any tool"), W("some, EVM only"), N, N],
+    ["Works without a terminal or keys on disk", Y(), Y(), Y(), N],
+  ];
+  return (
+    <section className="section reveal" id="compare">
+      <div className="section-head">
+        <span className="kicker mono">05 · how it compares</span>
+        <h2>
+          Both lanes, <em>in one place.</em>
+        </h2>
+        <p>EVM revoke tools can't see QoreChain's native grants; the command line can, if you know the commands. Unyoke does both, and checks each removal.</p>
+      </div>
+      <div className="cmp-wrap">
+        <table className="cmp">
+          <thead>
+            <tr>
+              <th><span className="sr-only">Feature</span></th>
+              <th className="us">Unyoke</th>
+              <th>EVM revoke tools</th>
+              <th>Wallet warnings</th>
+              <th>Command line</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(([k, ...cells]) => (
+              <tr key={k}>
+                <td>{k}</td>
+                {cells.map((c, i) => (
+                  <td key={i} className={i === 0 ? "us" : undefined}>{c}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function Faq() {
+  const qa: [string, string][] = [
+    ["Does Unyoke ever see my keys?", "No. It has no server and stores nothing. It reads the chain, and your wallet (QoreX, or an EVM wallet) shows and signs every revoke."],
+    ["Can I check someone else's address?", "Yes. Scanning is read-only and works for any qor1… or 0x… address. Only the owner can revoke."],
+    ["Why does a token revoke need my phone?", "The QoreX browser extension can't sign EVM transactions yet. Unyoke shows a QR code that opens the same scan in the QoreX app, where it can. Grants and fee grants revoke from the extension."],
+    ["How do I know a revoke worked?", "After each revoke Unyoke reads the chain again and only then marks it revoked. The receipt lists every transaction and the QoreX window it used."],
+    ["Why can't it see my older approvals?", "The public testnet node keeps history only from a recent block. Unyoke says where that is on every scan rather than pretend the list is complete."],
+    ["Is it on mainnet?", "Not yet. Unyoke runs on QoreChain's testnet; every transaction it links to is real and on that testnet."],
+  ];
+  return (
+    <section className="section reveal faq-block" id="faq">
+      <div className="section-head">
+        <span className="kicker mono">06 · questions</span>
+        <h2>
+          Answered <em>plainly.</em>
+        </h2>
+        <p>
+          More in the <a href={LINKS.github} target="_blank" rel="noreferrer">README</a>, including the trust model and its limits.
+        </p>
+      </div>
+      <div className="faq">
+        {qa.map(([q, a]) => (
+          <details key={q}>
+            <summary>{q}</summary>
+            <p>{a}</p>
+          </details>
+        ))}
+      </div>
+    </section>
   );
 }
