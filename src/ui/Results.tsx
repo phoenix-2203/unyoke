@@ -1,9 +1,10 @@
+import { useMemo, useState } from "react";
 import type { LiveApproval } from "../lib/evmApprovalState";
 import { type PqcKeyStatus, describePqcKey } from "../lib/pqcKey";
-import { formatQor, formatTokenAmount, shortAddress } from "../lib/format";
+import { shortAddress } from "../lib/format";
 import type { NativePermission } from "../lib/nativePermissions";
-import { type Risk, type RiskLevel, evmApprovalRisk, nativePermissionRisk, sortByRisk } from "../lib/risk";
-import { permissionKey } from "../lib/revoke";
+import { type LaneFilter, type PermissionRow, type SortBy, evmRow, nativeRow, selectRows } from "../lib/permissionRows";
+import type { RiskLevel } from "../lib/risk";
 import type { ScanResult } from "../lib/scanAccount";
 import type { RevokeStatus } from "./useRevoke";
 import { TxLink } from "./TxLink";
@@ -40,18 +41,32 @@ function PqcKeyNote({ k }: { k: PqcKeyStatus }) {
 }
 
 /** The results view. `example` renders it as a static showcase (no links, no actions). */
-export function Results({ r, example = false, actions }: { r: ScanResult; example?: boolean; actions?: RevokeActions }) {
-  const evm = sortByRisk(r.evm, (a) => evmApprovalRisk(a, r.scannedTo));
-  const native = sortByRisk(r.native, nativePermissionRisk);
-  const all = [...evm, ...native];
-  const count = (l: RiskLevel) => all.filter((x) => x.risk.level === l).length;
+export function Results({ r, example = false, actions, evmProgress }: { r: ScanResult; example?: boolean; actions?: RevokeActions; evmProgress?: string }) {
+  const pending = r.evmPending === true;
+  const rows = useMemo(
+    () => [...(pending ? [] : r.evm.map((a) => evmRow(a, r.scannedTo))), ...r.native.map(nativeRow)],
+    [r, pending],
+  );
+  const [text, setText] = useState("");
+  const [lane, setLane] = useState<LaneFilter>("all");
+  const [sort, setSort] = useState<SortBy>("risk");
+  const [open, setOpen] = useState<Set<string>>(() => new Set());
+  const shown = selectRows(rows, { text, lane, sort });
+  const count = (l: RiskLevel) => rows.filter((x) => x.level === l).length;
+  const toggle = (k: string) => setOpen((o) => { const n = new Set(o); n.has(k) ? n.delete(k) : n.add(k); return n; });
+  const chips: [LaneFilter, string, number][] = [
+    ["all", "All", rows.length],
+    ["high", "High risk", count("high")],
+    ["evm", "EVM", rows.filter((x) => x.lane === "evm").length],
+    ["native", "Native", rows.filter((x) => x.lane === "native").length],
+  ];
 
   return (
     <div className="results">
       <div className="summary">
         <div className="stat total">
           <div className="label">open permissions</div>
-          <div className="value">{all.length}</div>
+          <div className="value">{pending ? `${rows.length}+` : rows.length}</div>
           <div className="account mono">{shortAddress(r.account.evm)}</div>
         </div>
         {(["high", "medium", "low"] as const).map((l) => (
@@ -61,7 +76,7 @@ export function Results({ r, example = false, actions }: { r: ScanResult; exampl
             </div>
             <div className="value">{count(l)}</div>
             <div className="meter">
-              <span style={{ width: all.length ? `${(count(l) / all.length) * 100}%` : "0%" }} />
+              <span style={{ width: rows.length ? `${(count(l) / rows.length) * 100}%` : "0%" }} />
             </div>
           </div>
         ))}
@@ -69,7 +84,7 @@ export function Results({ r, example = false, actions }: { r: ScanResult; exampl
 
       {r.pqcKey && !example && <PqcKeyNote k={r.pqcKey} />}
 
-      {r.historyLimited && !example && (
+      {r.historyLimited && !example && !pending && (
         <div className="notice">
           <span className="dot medium" />
           <span>
@@ -78,22 +93,63 @@ export function Results({ r, example = false, actions }: { r: ScanResult; exampl
           </span>
         </div>
       )}
+      {r.evmError && <p className="error">Could not read the EVM lane: {r.evmError}</p>}
+      {r.nativeError && <p className="error">Could not read the native lane: {r.nativeError}</p>}
 
-      <div className="lane">
-        <div className="lane-head">
-          <h3>
-            <span className="lane-tag evm">EVM</span> Token approvals
-          </h3>
-          <span className="mono">
-            {example ? "example" : `blocks ${r.scannedFrom.toLocaleString("en-US")} → ${r.scannedTo.toLocaleString("en-US")}`}
-          </span>
+      <div className="ptable" role="table" aria-label="Open permissions">
+        <div className="ptools">
+          <div className="chips" role="group" aria-label="Show">
+            {chips.map(([k, label, n]) => (
+              <button key={k} type="button" className={`chip${lane === k ? " on" : ""}`} aria-pressed={lane === k} onClick={() => setLane(k)}>
+                {label} <span className="mono">{n}</span>
+              </button>
+            ))}
+          </div>
+          <div className="ptools-right">
+            <label className="sr-only" htmlFor={`find-${example ? "ex" : "app"}`}>Search permissions</label>
+            <input
+              id={`find-${example ? "ex" : "app"}`}
+              className="find"
+              placeholder="Search token, grant or address"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              spellCheck={false}
+            />
+            <label className="sr-only" htmlFor={`sort-${example ? "ex" : "app"}`}>Sort by</label>
+            <select id={`sort-${example ? "ex" : "app"}`} className="sort" value={sort} onChange={(e) => setSort(e.target.value as SortBy)}>
+              <option value="risk">Risk first</option>
+              <option value="lane">Lane</option>
+              <option value="holder">Who holds it</option>
+            </select>
+          </div>
         </div>
-        {r.evmError ? (
-          <p className="error">Could not read the EVM lane: {r.evmError}</p>
-        ) : evm.length === 0 ? (
+
+        <div className="prow phead" role="row">
+          <span role="columnheader">Risk</span>
+          <span role="columnheader">Permission</span>
+          <span role="columnheader">Lane</span>
+          <span role="columnheader">Allowance</span>
+          <span role="columnheader">Held by</span>
+          <span role="columnheader"><span className="sr-only">Action</span></span>
+        </div>
+
+        {shown.map((row) => (
+          <PermissionLine
+            key={row.key}
+            row={row}
+            open={open.has(row.key)}
+            onToggle={() => toggle(row.key)}
+            example={example}
+            actions={actions}
+          />
+        ))}
+
+        {pending && <PendingRows label={evmProgress ?? "reading EVM approval history"} />}
+
+        {!pending && shown.length === 0 && (
           <p className="empty">
-            No open token approvals found.
-            {r.accountKind === "cosmos" && (
+            {rows.length === 0 ? "No open permissions found on either lane." : "Nothing matches this filter."}
+            {rows.length === 0 && r.accountKind === "cosmos" && (
               <span className="empty-note">
                 {" "}
                 This is a Cosmos-style account (QoreX's default kind), which can't sign EVM transactions, so it can't give token
@@ -101,28 +157,77 @@ export function Results({ r, example = false, actions }: { r: ScanResult; exampl
               </span>
             )}
           </p>
-        ) : (
-          evm.map(({ item, risk }) => (
-            <EvmRow key={`${item.kind}:${item.token}:${item.spender}`} a={item} risk={risk} example={example} actions={actions} />
-          ))
         )}
-      </div>
-
-      <div className="lane">
-        <div className="lane-head">
-          <h3>
-            <span className="lane-tag native">Native</span> Grants
-          </h3>
-          <span className="mono">authz · fee grants · 7702</span>
+        <div className="pfoot mono">
+          {example ? "example scan" : pending ? "native lane read · EVM lane still loading" : `EVM blocks ${r.scannedFrom.toLocaleString("en-US")} → ${r.scannedTo.toLocaleString("en-US")} · native: authz, fee grants, 7702`}
         </div>
-        {r.nativeError ? (
-          <p className="error">Could not read the native lane: {r.nativeError}</p>
-        ) : native.length === 0 ? (
-          <p className="empty">No open grants found.</p>
-        ) : (
-          native.map(({ item, risk }, i) => <NativeRow key={i} p={item} risk={risk} actions={actions} />)
-        )}
       </div>
+    </div>
+  );
+}
+
+/** Placeholder rows while the EVM history is still being read. */
+function PendingRows({ label }: { label: string }) {
+  return (
+    <div className="pending" aria-live="polite">
+      {[0, 1].map((i) => (
+        <div className="prow skeleton" key={i} aria-hidden="true">
+          <span /><span /><span /><span /><span /><span />
+        </div>
+      ))}
+      <p className="pending-label mono">EVM lane: {label}…</p>
+    </div>
+  );
+}
+
+function PermissionLine({ row, open, onToggle, example, actions }: { row: PermissionRow; open: boolean; onToggle: () => void; example: boolean; actions?: RevokeActions }) {
+  const st = actions?.status[row.key];
+  const evm = row.source.lane === "evm" ? row.source.item : undefined;
+  const native = row.source.lane === "native" ? row.source.item : undefined;
+  const blocked = evm ? actions?.evmBlocker : undefined;
+  const onRevoke = actions ? () => (evm ? actions.onRevokeEvm(evm) : actions.onRevokeNative(native!)) : undefined;
+  const detailsId = `why-${row.key.replace(/[^a-z0-9]/gi, "")}`;
+  return (
+    <div className={`prow ${row.level}${open ? " open" : ""}`} role="row">
+      <span role="cell"><RiskTag level={row.level} /></span>
+      <span role="cell" className="pcell-main">
+        <button type="button" className="pwhy" aria-expanded={open} aria-controls={detailsId} onClick={onToggle}>
+          <span className={`token-badge ${row.lane === "native" ? "native" : ""}`} aria-hidden>{row.title.slice(0, 1)}</span>
+          <span>
+            <span className="cell-title">{row.title}</span>
+            <span className="cell-sub">{row.sub}</span>
+          </span>
+          <span className="chev" aria-hidden>›</span>
+        </button>
+      </span>
+      <span role="cell"><span className={`lane-tag ${row.lane}`}>{row.lane === "evm" ? "EVM" : "Native"}</span></span>
+      <span role="cell">
+        <span className="cell-title">{row.allowance}</span>
+        <span className="cell-sub">{row.allowanceSub}</span>
+      </span>
+      <span role="cell">
+        <span className="cell-title mono" title={row.holderFull}>{row.holder}</span>
+        <span className="cell-sub">
+          {row.holderSub}
+          {evm?.setInTx && !example && (
+            <>
+              {" · "}
+              <TxLink hash={evm.setInTx}>block {evm.setAtBlock.toLocaleString("en-US")}</TxLink>
+            </>
+          )}
+        </span>
+      </span>
+      <span role="cell" className="pcell-act">
+        <RevokeButton st={st} blocked={blocked} onClick={onRevoke} />
+      </span>
+      <div className="pdetail" id={detailsId} hidden={!open}>
+        <ul className="reasons">
+          {row.reasons.map((x) => (
+            <li key={x}>{x}</li>
+          ))}
+        </ul>
+      </div>
+      <StatusLine st={st} blocked={actions && st?.state !== "done" ? blocked : undefined} />
     </div>
   );
 }
@@ -180,96 +285,4 @@ function StatusLine({ st, blocked }: { st?: RevokeStatus; blocked?: string }) {
   }
   if (blocked) return <p className="status-line muted">{blocked}</p>;
   return null;
-}
-
-function EvmRow({ a, risk, example, actions }: { a: LiveApproval; risk: Risk; example: boolean; actions?: RevokeActions }) {
-  const st = actions?.status[permissionKey(a)];
-  const sym = a.tokenInfo.symbol ?? shortAddress(a.token);
-  const amount = a.kind === "operator" ? "Every NFT in this collection" : formatTokenAmount(a.amount, a.tokenInfo.decimals, sym);
-  const balance =
-    a.balance === undefined
-      ? "balance unknown"
-      : `you hold ${formatTokenAmount(a.balance, a.tokenInfo.decimals, a.kind === "operator" ? "NFTs" : sym)}`;
-  return (
-    <div className={`row ${risk.level}`}>
-      <RiskTag level={risk.level} />
-      <div className="token">
-        <span className="token-badge" aria-hidden>
-          {sym.slice(0, 1)}
-        </span>
-        <div>
-          <div className="cell-title">{sym}</div>
-          <div className="cell-sub mono">{shortAddress(a.token)}</div>
-        </div>
-      </div>
-      <div>
-        <div className="cell-title">{amount}</div>
-        <div className="cell-sub">{balance}</div>
-      </div>
-      <div>
-        <div className="cell-title mono">{shortAddress(a.spender)}</div>
-        <div className="cell-sub">
-          {a.spenderIsContract ? "contract" : "ordinary wallet"}
-          {a.setInTx && !example && (
-            <>
-              {" · "}
-              <TxLink hash={a.setInTx}>block {a.setAtBlock.toLocaleString("en-US")}</TxLink>
-            </>
-          )}
-        </div>
-      </div>
-      <RevokeButton st={st} blocked={actions?.evmBlocker} onClick={actions ? () => actions.onRevokeEvm(a) : undefined} />
-      <ul className="reasons">
-        {risk.reasons.map((x) => (
-          <li key={x}>{x}</li>
-        ))}
-      </ul>
-      <StatusLine st={st} blocked={actions && st?.state !== "done" ? actions.evmBlocker : undefined} />
-    </div>
-  );
-}
-
-function NativeRow({ p, risk, actions }: { p: NativePermission; risk: Risk; actions?: RevokeActions }) {
-  const st = actions?.status[permissionKey(p)];
-  const limit = (c?: { denom: string; amount: string }[]) =>
-    c ? c.map((x) => (x.denom === "uqor" ? formatQor(x.amount) : `${x.amount} ${x.denom}`)).join(", ") : "no limit";
-  const [title, sub, who, whoSub] =
-    p.kind === "eip7702"
-      ? ["7702 consent", p.live ? "active" : "expired", shortAddress(p.delegate), `expires at block ${p.expiryHeight.toLocaleString("en-US")}`]
-      : p.kind === "authz"
-        ? [
-            "Authz grant",
-            (p.msgTypeUrl ?? p.authorizationType).split(".").pop()!,
-            shortAddress(p.grantee),
-            `${p.spendLimit ? `up to ${limit(p.spendLimit)}` : "no spend limit"} · ${p.expiration ? `expires ${new Date(p.expiration).toLocaleDateString()}` : "never expires"}`,
-          ]
-        : ["Fee grant", limit(p.spendLimit), shortAddress(p.grantee), p.expiration ? `expires ${new Date(p.expiration).toLocaleDateString()}` : "never expires"];
-  return (
-    <div className={`row ${risk.level}`}>
-      <RiskTag level={risk.level} />
-      <div className="token">
-        <span className="token-badge native" aria-hidden>
-          {title.slice(0, 1)}
-        </span>
-        <div>
-          <div className="cell-title">{title}</div>
-          <div className="cell-sub mono">{sub}</div>
-        </div>
-      </div>
-      <div>
-        <div className="cell-title">granted to</div>
-        <div className="cell-sub mono">{who}</div>
-      </div>
-      <div>
-        <div className="cell-sub">{whoSub}</div>
-      </div>
-      <RevokeButton st={st} onClick={actions ? () => actions.onRevokeNative(p) : undefined} />
-      <ul className="reasons">
-        {risk.reasons.map((x) => (
-          <li key={x}>{x}</li>
-        ))}
-      </ul>
-      <StatusLine st={st} />
-    </div>
-  );
 }

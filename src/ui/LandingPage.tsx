@@ -161,7 +161,7 @@ export function LandingPage() {
           </h2>
           <p>One scan reads both lanes of QoreChain and sorts what it finds by how much damage it could do.</p>
         </div>
-        <button type="button" className="shot shot-link" onClick={() => openApp(DEMO_ADDRESS)} aria-label="Open a real scan of a sample account">
+        <div className="shot">
           <div className="shot-bar">
             <span className="shot-dots" aria-hidden>
               <i />
@@ -169,14 +169,14 @@ export function LandingPage() {
               <i />
             </span>
             <span className="mono">unyoke · example scan</span>
-            <span className="shot-open mono">
+            <button type="button" className="shot-open mono" onClick={() => openApp(DEMO_ADDRESS)}>
               open a real one <ArrowUpRight size={13} />
-            </span>
+            </button>
           </div>
           <div className="shot-body">
             <Results r={SAMPLE_SCAN} example />
           </div>
-        </button>
+        </div>
       </section>
 
       <section className="section reveal" id="different">
