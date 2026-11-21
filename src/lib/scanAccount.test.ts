@@ -91,6 +91,24 @@ describe("scanAccount", () => {
     expect(stages.at(-1)).toBe("done");
   });
 
+  it("shows the native lane first, marked as waiting for the EVM lane", async () => {
+    const partials: { evmPending?: boolean; evm: unknown[]; native: unknown[] }[] = [];
+    const r = await scanAccount({ input: OWNER, evm: fakeEvm(), rest: "https://rest.example", fetchFn: emptyNative, onPartial: (p) => partials.push(p) });
+    expect(partials).toHaveLength(1);
+    expect(partials[0]).toMatchObject({ evmPending: true, evm: [], native: [] });
+    expect(r.evmPending).toBeUndefined();
+    expect(r.evm).toHaveLength(1);
+  });
+
+  it("sends no partial result once the scan is stopped", async () => {
+    const ctrl = new AbortController();
+    ctrl.abort();
+    let called = false;
+    await scanAccount({ input: OWNER, evm: fakeEvm(), rest: "https://rest.example", fetchFn: emptyNative, signal: ctrl.signal, onPartial: () => (called = true) }).catch(() => {});
+    await new Promise((res) => setTimeout(res, 20));
+    expect(called).toBe(false);
+  });
+
   it("still returns the native lane when the EVM lane fails", async () => {
     const r = await scanAccount({ input: OWNER, evm: fakeEvm({ failLogs: true }), rest: "https://rest.example", fetchFn: emptyNative });
     expect(r.evmError).toMatch(/rpc down/);

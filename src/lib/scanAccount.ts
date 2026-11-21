@@ -46,6 +46,8 @@ export interface ScanResult {
   /** Set when one lane failed; the other lane's results are still returned. */
   evmError?: string;
   nativeError?: string;
+  /** True while the EVM lane is still being read (a partial result shows the native lane first). */
+  evmPending?: boolean;
   /** Permissions removed in the past (any tool), newest first, as far back as the node keeps history. */
   history: { evm: EvmRevocation[]; native: NativeRevocation[]; nativeError?: string };
 }
@@ -60,6 +62,8 @@ export interface ScanOptions {
   fromBlock?: bigint;
   concurrency?: number;
   onProgress?: (p: ScanProgress) => void;
+  /** Called once the native lane is read, before the (slower) EVM history: results can show at once. */
+  onPartial?: (r: ScanResult) => void;
   signal?: AbortSignal;
 }
 
@@ -83,6 +87,22 @@ export async function scanAccount(opts: ScanOptions): Promise<ScanResult> {
     (native) => ({ native }),
     (e) => ({ native: [] as NativeRevocation[], nativeError: message(e) }),
   );
+
+  // The native lane answers in a second or two; show it while the EVM history is read.
+  void Promise.all([nativePromise, kindPromise, nativeHistoryPromise]).then(([n, accountKind, nh]) => {
+    if (opts.signal?.aborted || !opts.onPartial) return;
+    opts.onPartial({
+      account,
+      accountKind,
+      evm: [],
+      evmPending: true,
+      scannedFrom: 0n,
+      scannedTo: 0n,
+      historyLimited: false,
+      ...n,
+      history: { evm: [], ...nh },
+    });
+  }, () => {});
 
   progress({ stage: "history" });
   let scannedFrom = 0n;
