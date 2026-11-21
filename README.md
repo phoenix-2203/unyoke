@@ -58,15 +58,15 @@ flowchart LR
     C --> P["Receipt<br/>tx links + the window used"]
 ```
 
-1. **Scan.** Paste a `qor1…` or `0x…` address (they're the same account), connect a wallet, or try the sample account. Scanning is read-only and works for anyone's address.
-2. **Understand.** Each permission gets a card: who holds it, what it can do in one sentence, whether it's unlimited or never expires, and a risk level.
+1. **Scan.** Paste a `qor1…` or `0x…` address (they're the same account), connect a wallet, or try the sample account. Scanning is read-only and works for anyone's address. Native grants show within seconds; token approvals fill in as the EVM history is read.
+2. **Understand.** Both lanes in one table, one row per permission, ranked by risk: what it is, the lane, how much, and who holds it. Open a row for what it can do in plain words. Filter by High risk, EVM or Native, search by token, grant or address, and sort by risk, lane or holder.
 3. **Revoke.** One button per permission, or **Revoke all high risk**. Each is a separate approval in your wallet; Unyoke never batches anything you didn't see.
 4. **Verify.** After the transaction confirms, Unyoke reads the allowance or the grant again. Only then does it say **Revoked ✓**.
 5. **Keep a receipt.** Every removal is listed with its transaction and, for token revokes, the exact window QoreX opened ("this token only, 1 tx, used up"). **Copy receipt** gives you a markdown table.
-6. **See the history.** Each scan also lists the permissions this account has already removed, read from the chain: allowances set to 0, approve-all turned off, and `authz`, fee-grant and 7702 revokes. It includes revokes made with any tool, marks the ones sent through Unyoke, and looks the same to anyone who scans the address.
+6. **See the history** (its own tab, next to Permissions and Receipt). Each scan also lists the permissions this account has already removed, read from the chain: allowances set to 0, approve-all turned off, and `authz`, fee-grant and 7702 revokes. It includes revokes made with any tool, marks the ones sent through Unyoke, and looks the same to anyone who scans the address.
 7. **Check the post-quantum key.** Each scan reads whether the account has a registered ML-DSA-87 key, and whether it was registered with a proof of possession, through Unyoke's own [`PqcKeyCheck`](contracts/PqcKeyCheck.sol) contract on testnet. Native revokes and EVM windows both need that key.
 
-Light and dark themes: Unyoke follows your system setting until you pick one with the sun/moon button, and remembers your choice.
+Light and dark themes: Unyoke follows your system setting until you pick one with the sun/moon button, and remembers your choice. Type is Geist and Geist Mono, served from the site itself (no font requests to other hosts). No accessibility issues found by axe-core (WCAG 2.1 AA) on the landing page or the scanner, in either theme.
 
 ## What it finds
 
@@ -208,7 +208,7 @@ Build Before Q-Day asks what breaks when quantum computers can recover private k
 - **History is pruned.** Approvals set before block 8,790,799 can't be found through the public node. Unyoke shows this on every scan. An indexer is on the roadmap.
 - **Token revokes on desktop need an extra step.** The QoreX extension revokes grants and fee grants on testnet (its testnet switch is hidden: tap the version number 7 times, then *Switch to testnet (diana)*), but it can't sign EVM transactions yet. For token approvals, Unyoke shows a QR code that opens the same scan straight in the QoreX app (through QoreX's `link.qore.network/browse` link); MetaMask or Rabby also work inside an EVM access window opened in QoreX.
 - **Clearing 7702 consent isn't tested yet.** Unyoke builds the `MsgClearEVMDelegation` message, but QoreX may refuse to display it, as it does `MsgCloseEVMWindow`. If it does, Unyoke shows that message instead of failing silently.
-- **Not audited.** It's a client-side tool with 99 unit tests, and it only ever sends revocations: setting things to zero or removing them.
+- **Not audited.** It's a client-side tool with 106 unit tests, and it only ever sends revocations: setting things to zero or removing them.
 
 ## Architecture
 
