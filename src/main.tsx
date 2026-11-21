@@ -1,4 +1,11 @@
 import "@rainbow-me/rainbowkit/styles.css";
+// Self-hosted fonts: no request to Google, nothing to wait on from another host.
+import "@fontsource/geist-sans/latin-400.css";
+import "@fontsource/geist-sans/latin-500.css";
+import "@fontsource/geist-sans/latin-600.css";
+import "@fontsource/geist-sans/latin-700.css";
+import "@fontsource/geist-mono/latin-400.css";
+import "@fontsource/geist-mono/latin-500.css";
 import "./styles.css";
 
 import { RainbowKitProvider, darkTheme, lightTheme } from "@rainbow-me/rainbowkit";
