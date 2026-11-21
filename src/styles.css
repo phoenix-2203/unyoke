@@ -36,9 +36,8 @@
   --core-glow: 0.35;
   --me-label-halo: 0;
   --radius: 16px;
-  --sans: "Inter Tight", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --serif: "Instrument Serif", ui-serif, Georgia, serif;
-  --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --sans: "Geist Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   color-scheme: dark;
   font-family: var(--sans);
   color: var(--text);
@@ -137,11 +136,10 @@ code,
   letter-spacing: 0;
 }
 
+/* Emphasis is the accent, not an italic: Unyoke's voice is a clean grotesk. */
 em {
-  font-family: var(--serif);
-  font-style: italic;
-  font-weight: 400;
-  letter-spacing: -0.01em;
+  font-style: normal;
+  color: var(--accent-text);
 }
 
 main {
@@ -269,15 +267,14 @@ main {
 }
 
 .hero h1 {
-  font-size: clamp(2.6rem, 7vw, 5.4rem);
-  line-height: 0.98;
-  letter-spacing: -0.045em;
-  font-weight: 600;
+  font-size: clamp(2.5rem, 6.2vw, 4.9rem);
+  line-height: 1;
+  letter-spacing: -0.055em;
+  font-weight: 650;
   margin: 1.6rem 0 1.4rem;
 }
 
 .hero h1 em {
-  font-size: 1.08em;
   color: var(--text);
 }
 
@@ -1220,10 +1217,10 @@ button.revoke {
 
 .band blockquote {
   margin: 1.1rem 0 0;
-  font-family: var(--serif);
-  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-weight: 500;
+  font-size: clamp(1.7rem, 3.6vw, 2.7rem);
   line-height: 1.12;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.035em;
   max-width: 900px;
 }
 
