@@ -41,7 +41,7 @@ function curve(e: Edge) {
 export function PermissionGraph() {
   return (
     <div className="graph">
-      <svg viewBox="0 0 900 440" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Your account and the permissions it has handed out">
+      <svg viewBox="0 0 900 440" preserveAspectRatio="xMidYMid meet" aria-label="Your account and the permissions it has handed out">
         <defs>
           <radialGradient id="core" cx="50%" cy="50%" r="50%">
             <stop offset="0%" stopColor="var(--accent)" stopOpacity="var(--core-glow)" />
@@ -64,7 +64,7 @@ export function PermissionGraph() {
             <a
               href={e.href}
               className="node-link"
-              aria-label={`${e.title}: what this permission is`}
+              aria-label={`${e.label} ${e.sub}: ${e.title}, what this permission is`}
               onClick={(ev) => {
                 ev.preventDefault();
                 navigate(e.href);
