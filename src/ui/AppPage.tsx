@@ -38,6 +38,7 @@ export function AppPage({ initialAddress }: { initialAddress?: string }) {
       }
     : undefined;
   const [bulk, setBulk] = useState(false);
+  const [tab, setTab] = useState<"permissions" | "history" | "receipt">("permissions");
   async function revokeAllHigh() {
     if (!highRisk) return;
     setBulk(true);
@@ -72,12 +73,21 @@ export function AppPage({ initialAddress }: { initialAddress?: string }) {
     abort.current = ctrl;
     setError(undefined);
     setResult(undefined);
+    setTab("permissions");
     setProgress({ stage: "history" });
     const url = `/app?address=${encodeURIComponent(target)}`;
     if (window.location.pathname + window.location.search !== url) window.history.replaceState({}, "", url);
     try {
       setResult(
-        await scanAccount({ input: target, evm: client as unknown as EvmClient, rest: REST, signal: ctrl.signal, onProgress: setProgress }),
+        await scanAccount({
+          input: target,
+          evm: client as unknown as EvmClient,
+          rest: REST,
+          signal: ctrl.signal,
+          onProgress: setProgress,
+          // Show the native lane as soon as it's read; never replace a finished scan with it.
+          onPartial: (partial) => setResult((cur) => (cur && !cur.evmPending ? cur : partial)),
+        }),
       );
     } catch (e) {
       setError(ctrl.signal.aborted ? "Scan stopped." : e instanceof Error ? e.message : String(e));
@@ -168,7 +178,7 @@ export function AppPage({ initialAddress }: { initialAddress?: string }) {
         </Link>
       </div>
 
-      {scanning && <Progress p={progress} />}
+      {scanning && !result && <Progress p={progress} />}
       {error && (
         <p className="error" role="alert">
           {error}
@@ -194,11 +204,37 @@ export function AppPage({ initialAddress }: { initialAddress?: string }) {
               </button>
             </div>
           )}
-          <PhoneHandoff address={result.account.qor} />
-          <Results r={result} actions={{ status, evmBlocker, onRevokeEvm: revokeEvm, onRevokeNative: revokeNative }} />
-          <Receipt account={result.account.evm} entries={receipt} />
-          <History r={result} />
-          <TestSandbox qor={result.account.qor} evm={result.account.evm} canUseTokens={result.accountKind !== "cosmos"} onDone={applySandbox} />
+          <div className="tabs" role="tablist" aria-label="Scan results">
+            {(
+              [
+                ["permissions", "Permissions"],
+                ["history", `History${result.evmPending ? "" : ` · ${result.history.evm.length + result.history.native.length}`}`],
+                ["receipt", `Receipt${receipt.length ? ` · ${receipt.length}` : ""}`],
+              ] as const
+            ).map(([k, label]) => (
+              <button key={k} type="button" role="tab" aria-selected={tab === k} className={`tab${tab === k ? " on" : ""}`} onClick={() => setTab(k)}>
+                {label}
+              </button>
+            ))}
+          </div>
+          {tab === "permissions" && (
+            <>
+              <PhoneHandoff address={result.account.qor} />
+              <Results
+                r={result}
+                evmProgress={progress ? progressLabel(progress) : undefined}
+                actions={{ status, evmBlocker, onRevokeEvm: revokeEvm, onRevokeNative: revokeNative }}
+              />
+              <TestSandbox qor={result.account.qor} evm={result.account.evm} canUseTokens={result.accountKind !== "cosmos"} onDone={applySandbox} />
+            </>
+          )}
+          {tab === "history" && <History r={result} />}
+          {tab === "receipt" &&
+            (receipt.length ? (
+              <Receipt account={result.account.evm} entries={receipt} />
+            ) : (
+              <p className="empty">Nothing revoked in this visit yet. Each revoke you make here is added, with its transaction, and checked on chain.</p>
+            ))}
         </section>
       ) : (
         !scanning && (
@@ -214,18 +250,23 @@ export function AppPage({ initialAddress }: { initialAddress?: string }) {
   );
 }
 
-function Progress({ p }: { p: ScanProgress }) {
+function progressLabel(p: ScanProgress): string {
   const pct = p.stage === "evm" && p.blocksTotal ? Number((p.blocksDone! * 100n) / p.blocksTotal) : undefined;
   const label: Record<ScanProgress["stage"], string> = {
     history: "finding where the node's history starts",
-    evm: `reading EVM approval history${pct !== undefined ? ` · ${pct}%` : ""}`,
+    evm: `reading approval history${pct !== undefined ? ` · ${pct}%` : ""}`,
     live: "checking which approvals are still open",
-    native: "reading native-lane grants",
+    native: "finishing up",
     done: "done",
   };
+  return label[p.stage];
+}
+
+function Progress({ p }: { p: ScanProgress }) {
+  const pct = p.stage === "evm" && p.blocksTotal ? Number((p.blocksDone! * 100n) / p.blocksTotal) : undefined;
   return (
     <div className="progress wide" aria-live="polite">
-      {label[p.stage]}…
+      {progressLabel(p)}…
       <div className={`bar${pct === undefined ? " indeterminate" : ""}`}>
         <span style={pct !== undefined ? { width: `${pct}%` } : undefined} />
       </div>
