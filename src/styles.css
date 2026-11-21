@@ -7,7 +7,7 @@
   --line-soft: rgba(255, 255, 255, 0.05);
   --text: #f2efe9;
   --muted: #9a9ea8;
-  --faint: #60646d;
+  --faint: #80858f;
   --accent: #d8ff5c;
   --accent-ink: #0b0d02;
   --high: #ff5a5a;
@@ -54,7 +54,7 @@
   --line-soft: rgba(17, 19, 23, 0.06);
   --text: #121418;
   --muted: #565b65;
-  --faint: #868b95;
+  --faint: #676c76;
   --high: #d4282a;
   --medium: #a85f00;
   --low: #13803b;
@@ -990,7 +990,7 @@ button.revoke {
   gap: 0.4rem;
 }
 
-.chip {
+.fchip {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -1003,20 +1003,20 @@ button.revoke {
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
-.chip .mono {
+.fchip .mono {
   font-size: 0.72rem;
   color: var(--faint);
 }
-.chip:hover {
+.fchip:hover {
   color: var(--text);
   border-color: rgba(var(--ink-rgb), 0.2);
 }
-.chip.on {
+.fchip.on {
   background: var(--accent);
   border-color: var(--accent);
   color: var(--accent-ink);
 }
-.chip.on .mono {
+.fchip.on .mono {
   color: var(--accent-ink);
   opacity: 0.7;
 }
@@ -1040,7 +1040,7 @@ button.revoke {
 }
 .find:focus-visible,
 .sort:focus-visible,
-.chip:focus-visible,
+.fchip:focus-visible,
 .pwhy:focus-visible,
 .tab:focus-visible {
   outline: 2px solid var(--accent);

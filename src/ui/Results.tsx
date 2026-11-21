@@ -96,11 +96,11 @@ export function Results({ r, example = false, actions, evmProgress }: { r: ScanR
       {r.evmError && <p className="error">Could not read the EVM lane: {r.evmError}</p>}
       {r.nativeError && <p className="error">Could not read the native lane: {r.nativeError}</p>}
 
-      <div className="ptable" role="table" aria-label="Open permissions">
+      <div className="ptable" aria-label="Open permissions">
         <div className="ptools">
           <div className="chips" role="group" aria-label="Show">
             {chips.map(([k, label, n]) => (
-              <button key={k} type="button" className={`chip${lane === k ? " on" : ""}`} aria-pressed={lane === k} onClick={() => setLane(k)}>
+              <button key={k} type="button" className={`fchip${lane === k ? " on" : ""}`} aria-pressed={lane === k} onClick={() => setLane(k)}>
                 {label} <span className="mono">{n}</span>
               </button>
             ))}
@@ -124,13 +124,13 @@ export function Results({ r, example = false, actions, evmProgress }: { r: ScanR
           </div>
         </div>
 
-        <div className="prow phead" role="row">
-          <span role="columnheader">Risk</span>
-          <span role="columnheader">Permission</span>
-          <span role="columnheader">Lane</span>
-          <span role="columnheader">Allowance</span>
-          <span role="columnheader">Held by</span>
-          <span role="columnheader"><span className="sr-only">Action</span></span>
+        <div className="prow phead" aria-hidden="true">
+          <span>Risk</span>
+          <span>Permission</span>
+          <span>Lane</span>
+          <span>Allowance</span>
+          <span>Held by</span>
+          <span><span className="sr-only">Action</span></span>
         </div>
 
         {shown.map((row) => (
@@ -188,9 +188,9 @@ function PermissionLine({ row, open, onToggle, example, actions }: { row: Permis
   const onRevoke = actions ? () => (evm ? actions.onRevokeEvm(evm) : actions.onRevokeNative(native!)) : undefined;
   const detailsId = `why-${row.key.replace(/[^a-z0-9]/gi, "")}`;
   return (
-    <div className={`prow ${row.level}${open ? " open" : ""}`} role="row">
-      <span role="cell"><RiskTag level={row.level} /></span>
-      <span role="cell" className="pcell-main">
+    <div className={`prow ${row.level}${open ? " open" : ""}`}>
+      <span><RiskTag level={row.level} /></span>
+      <span className="pcell-main">
         <button type="button" className="pwhy" aria-expanded={open} aria-controls={detailsId} onClick={onToggle}>
           <span className={`token-badge ${row.lane === "native" ? "native" : ""}`} aria-hidden>{row.title.slice(0, 1)}</span>
           <span>
@@ -200,12 +200,12 @@ function PermissionLine({ row, open, onToggle, example, actions }: { row: Permis
           <span className="chev" aria-hidden>›</span>
         </button>
       </span>
-      <span role="cell"><span className={`lane-tag ${row.lane}`}>{row.lane === "evm" ? "EVM" : "Native"}</span></span>
-      <span role="cell">
+      <span><span className={`lane-tag ${row.lane}`}>{row.lane === "evm" ? "EVM" : "Native"}</span></span>
+      <span>
         <span className="cell-title">{row.allowance}</span>
         <span className="cell-sub">{row.allowanceSub}</span>
       </span>
-      <span role="cell">
+      <span>
         <span className="cell-title mono" title={row.holderFull}>{row.holder}</span>
         <span className="cell-sub">
           {row.holderSub}
@@ -217,7 +217,7 @@ function PermissionLine({ row, open, onToggle, example, actions }: { row: Permis
           )}
         </span>
       </span>
-      <span role="cell" className="pcell-act">
+      <span className="pcell-act">
         <RevokeButton st={st} blocked={blocked} onClick={onRevoke} />
       </span>
       <div className="pdetail" id={detailsId} hidden={!open}>
