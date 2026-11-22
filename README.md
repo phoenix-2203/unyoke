@@ -9,6 +9,7 @@ A QoreChain account can hand out *standing permissions*: a token approval to a c
 Unyoke reads both lanes for any address, tells you in plain words what each permission can do and how risky it is, and removes it in one tap from the QoreX wallet. After each removal it reads the chain again to prove the permission is gone, then adds it to a receipt you can keep.
 
 - **Try it:** https://unyoke.duckdns.org (QoreChain testnet; scan any address, revoke your own with QoreX: the phone app, or the browser extension on desktop)
+- **Watch:** the demo video (under 3 minutes): https://youtu.be/ar_PSKUhMTg
 - **Sample account:** [`qor178yef…mzu`](https://unyoke.duckdns.org/app?address=qor178yefzlrjy9hqgjt63tc5920wnp2hqyzlfcmzu), left open on purpose: an unlimited fUSD approval, an `authz` send grant (up to 5 QOR), a vote grant and an unlimited fee grant, all to `0x…dEaD`, plus a revoke history made through Unyoke. It's what **Try a sample account** opens.
 - **Built for:** [Build Before Q-Day](https://build.qorechain.io), the **Quantum Pass** track
 - **Started from:** [`create-qorechain-dapp`](https://github.com/qorechain/qorechain-sdk) (viem-wagmi template, testnet), in commit [`463e34f`](https://github.com/phoenix-2203/unyoke/commit/463e34ff05742c7ac1680804666cdc797179c66a)
