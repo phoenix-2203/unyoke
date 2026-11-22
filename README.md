@@ -22,7 +22,7 @@ Unyoke reads both lanes for any address, tells you in plain words what each perm
 
 ## Contents
 
-[The problem](#the-problem) · [What Unyoke does](#what-unyoke-does) · [What it finds](#what-it-finds) · [How risk is rated](#how-risk-is-rated) · [Try it in two minutes](#try-it-in-two-minutes) · [How a revoke is signed](#how-a-revoke-is-signed) · [Proven on testnet](#proven-on-testnet) · [How it compares](#how-it-compares) · [Why it matters for Q-Day](#why-it-matters-for-q-day) · [Trust model and limits](#trust-model-and-limits) · [Architecture](#architecture) · [Run it](#run-it) · [Roadmap](#roadmap)
+[The problem](#the-problem) · [What Unyoke does](#what-unyoke-does) · [What it finds](#what-it-finds) · [How risk is rated](#how-risk-is-rated) · [Try it in two minutes](#try-it-in-two-minutes) · [How a revoke is signed](#how-a-revoke-is-signed) · [Proven on testnet](#proven-on-testnet) · [How it compares](#how-it-compares) · [Why it matters for Q-Day](#why-it-matters-for-q-day) · [Trust model and limits](#trust-model-and-limits) · [Architecture](#architecture) · [Run it](#run-it) · [Roadmap](#roadmap) · [Credits](#credits)
 
 ---
 
@@ -301,6 +301,22 @@ Demo data on a **throwaway** testnet account (never a real one; the script refus
 - **Clear 7702 consent** end to end, or a clear hand-off if QoreX won't display it.
 - **Watch mode:** a daily check that alerts when a new high-risk permission appears.
 - **Shareable receipts** with a link anyone can verify against the chain.
+
+## Credits
+
+Unyoke was started from [`create-qorechain-dapp`](https://github.com/qorechain/qorechain-sdk) (viem-wagmi template). Open source libraries and QoreChain kits it uses:
+
+| Library | Licence | Used for |
+| --- | --- | --- |
+| [create-qorechain-dapp](https://github.com/qorechain/qorechain-sdk) | Apache-2.0 | The starting template (Vite, React, viem, wagmi, testnet config) |
+| [@qorechain/sdk](https://github.com/qorechain/qorechain-sdk) and [@qorechain/evm](https://github.com/qorechain/qorechain-sdk) | Apache-2.0 | Chain config, native and EVM reads |
+| @qorechain/qorex-rainbowkit, @qorechain/qorex-types | Apache-2.0 | Connecting QoreX; QoreX's request types |
+| @qorechain/qoreseal, @qorechain/qorex-wallet-mock | Apache-2.0 | Tests |
+| [wagmi](https://wagmi.sh), [viem](https://viem.sh), [RainbowKit](https://rainbowkit.com), [TanStack Query](https://tanstack.com/query) | MIT | Wallet connection and EVM calls |
+| [React](https://react.dev), [Vite](https://vite.dev), [Vitest](https://vitest.dev) | MIT | The app, its build and its tests |
+| [qrcode](https://github.com/soldair/node-qrcode) | MIT | The QR code that hands a revoke over to the QoreX phone app |
+| [Geist Sans and Geist Mono](https://vercel.com/font) (via Fontsource) | OFL-1.1 | Typefaces, self-hosted |
+| [solc](https://github.com/ethereum/solc-js) | MIT | Compiling the PqcKeyCheck contract (build tool only) |
 
 ---
 
